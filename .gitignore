@@ -46,11 +46,12 @@ app.*.map.json
 
 # Jeenith 构建产物归档：APK/zip 体积大（单包 50MB+），不入版本控制，
 # 仅保留构建历史记录。详见 docs/FLUTTER_APK_BUILD_PIPELINE.md Q7。
-# 构建产物按平台分类：android/ windows/ 不入版本控制；release_notes/ 与历史记录入库
-/builds/*
-!/builds/build_history.json
-!/builds/release_history.json
-!/builds/release_notes/
+# 结构：release/（分发产物）+ packages/（包管理器产物）；产物不入库，记录与说明入库
+/builds/release/android/
+/builds/release/windows/
+/builds/packages/android/
+/builds/packages/windows/
+/builds/packages/release_notes/
 
 # 思源宋体：全字重原始 OTF 本地保留备用，不入 git；仅子集化后的 Regular + Bold 入库
 # （子集化：pyftsubset 提取 GB2312 一级 + 符号约 4500 字，每 weight ~1.4MB，原 11MB/weight）
@@ -60,3 +61,5 @@ mobile/assets/fonts/SiYuanSongTiRegular/SourceHanSerifCN-*.otf
 .对话.txt
 /.trae/documents/*
 /design/html/*
+# 本地会话恢复快捷方式（含本地会话 ID，不入库）
+.对话*.bat
