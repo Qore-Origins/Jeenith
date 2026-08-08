@@ -49,8 +49,9 @@ app.*.map.json
 # 结构：release/（分发产物）+ packages/（包管理器产物）；产物不入库，记录与说明入库
 /builds/release/android/
 /builds/release/windows/
-/builds/packages/android/
-/builds/packages/windows/
+/builds/packages/npm/
+/builds/packages/maven/
+/builds/packages/nuget/
 /builds/packages/release_notes/
 
 # 思源宋体：全字重原始 OTF 本地保留备用，不入 git；仅子集化后的 Regular + Bold 入库
