@@ -194,8 +194,8 @@ class StarChartPainter extends CustomPainter {
                     ? clr.waterDeepGlow
                     : (isMing ? clr.goldBright : clr.textMeta)))
             .withValues(alpha: textAlpha),
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
+        fontSize: AppFontSize.bodySmall,
+        fontWeight: AppFontWeight.bold,
       );
 
       // Palace name
@@ -207,8 +207,8 @@ class StarChartPainter extends CustomPainter {
           const Offset(0, -9),
           color: (isMing ? clr.gold : clr.textPrimary)
               .withValues(alpha: textAlpha),
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontSize: AppFontSize.micro,
+          fontWeight: AppFontWeight.bold,
         );
       }
 
@@ -286,8 +286,8 @@ class StarChartPainter extends CustomPainter {
         mingGanZhi,
         Offset(cx, cy),
         color: clr.goldBright.withValues(alpha: centerAlpha),
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
+        fontSize: AppFontSize.button,
+        fontWeight: AppFontWeight.bold,
       );
 
       // 五行局
@@ -296,7 +296,7 @@ class StarChartPainter extends CustomPainter {
         wuxingJu,
         Offset(cx, cy + innerR * 0.4),
         color: clr.fireGlow.withValues(alpha: centerAlpha),
-        fontSize: 11,
+        fontSize: AppFontSize.caption,
       );
     }
   }
@@ -341,7 +341,7 @@ class StarChartPainter extends CustomPainter {
           color: _categoryColor(s.category).withValues(alpha: alpha),
           fontSize: fontSize,
           fontWeight:
-              s.category == StarCategory.main ? FontWeight.bold : FontWeight.normal,
+              s.category == StarCategory.main ? AppFontWeight.bold : AppFontWeight.regular,
         ),
       ),
       if (s.sihua != null)
@@ -350,7 +350,7 @@ class StarChartPainter extends CustomPainter {
           style: TextStyle(
             color: _siHuaColor(s.sihua!).withValues(alpha: alpha),
             fontSize: fontSize - 2,
-            fontWeight: FontWeight.bold,
+            fontWeight: AppFontWeight.bold,
           ),
         ),
     ];
@@ -370,7 +370,7 @@ class StarChartPainter extends CustomPainter {
     Offset center, {
     required Color color,
     required double fontSize,
-    FontWeight fontWeight = FontWeight.normal,
+    FontWeight fontWeight = AppFontWeight.regular,
   }) {
     final tp = TextPainter(
       text: TextSpan(

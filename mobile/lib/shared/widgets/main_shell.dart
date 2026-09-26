@@ -85,9 +85,9 @@ class _MainShellState extends State<MainShell> {
       selected: selected,
       label: item.label,
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.panelCompact),
           hoverColor: c.jade.withValues(alpha: 0.08),
           focusColor: c.jade.withValues(alpha: 0.14),
           onTap: () => _go(item.index),
@@ -96,8 +96,8 @@ class _MainShellState extends State<MainShell> {
             decoration: BoxDecoration(
               color: selected
                   ? c.jade.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
+                  : AppColors.transparent,
+              borderRadius: BorderRadius.circular(AppRadius.panelCompact),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -108,8 +108,8 @@ class _MainShellState extends State<MainShell> {
                   item.label,
                   style: TextStyle(
                     color: selected ? c.textPrimary : c.textSubtitle,
-                    fontSize: 11,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: AppFontSize.caption,
+                    fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.regular,
                   ),
                 ),
               ],

@@ -21,6 +21,7 @@ import '../core/config/app_config.dart';
 import '../core/config/config_providers.dart';
 import '../core/divination/divination_registry.dart';
 import '../core/divination/divination_tech.dart';
+import '../core/ai/ai_case_launch_context.dart';
 import '../core/history/history_store.dart';
 import '../features/home/home_page.dart';
 import '../features/history/history_page.dart';
@@ -52,8 +53,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/jiekua',
                 builder: (context, state) {
                   final extra = state.extra;
+                  final launchContext = extra is AiCaseLaunchContext
+                      ? extra
+                      : extra is HistoryEntry
+                      ? AiCaseLaunchContext.fromHistoryEntry(extra)
+                      : null;
                   return JiekuaPage(
                     initialEntry: extra is HistoryEntry ? extra : null,
+                    initialContext: launchContext,
                   );
                 },
               ),

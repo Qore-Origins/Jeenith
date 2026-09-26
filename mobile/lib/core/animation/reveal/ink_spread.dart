@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Qore
 import 'package:flutter/material.dart';
+import 'package:jeenith/core/theme/app_theme.dart';
 
 /// 墨晕开揭示动画组件。
 ///
@@ -69,9 +70,9 @@ class _InkSpreadState extends State<InkSpread>
               center: Alignment.center,
               radius: radius / (rect.longestSide * 0.7),
               colors: [
-                Colors.white,
-                Colors.white.withValues(alpha: p.clamp(0.0, 1.0)),
-                Colors.transparent,
+                AppColors.paperWhite,
+                AppColors.paperWhite.withValues(alpha: p.clamp(0.0, 1.0)),
+                AppColors.transparent,
               ],
               stops: [0.0, p.clamp(0.0, 1.0), 1.0],
             ).createShader(rect);

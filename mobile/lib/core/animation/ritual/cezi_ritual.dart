@@ -2,8 +2,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -67,7 +67,7 @@ const String _glyph = '道';
 /// Full five-element palette for reference:
 ///   金 Metal #E8D9A0 · 木 Wood #6BAB6B · 水 Water #4A6FA5
 ///   火 Fire  #E85A3C · 土 Earth #B8893D
-const Color _wuxingColor = Color(0xFF6BAB6B);
+const Color _wuxingColor = AppColors.ritualWood;
 const String _wuxingName = '木';
 
 class _CeziRitualPainter extends CustomPainter {
@@ -199,7 +199,7 @@ class _CeziRitualPainter extends CustomPainter {
       TextStyle(
         foreground: textPaint,
         fontSize: fontSize,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
   }
@@ -239,8 +239,8 @@ class _CeziRitualPainter extends CustomPainter {
         TextStyle(
           color: _wuxingColor.withValues(alpha: labelA * 0.85),
           fontSize: R * 0.16,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 4,
+          fontWeight: AppFontWeight.medium,
+          letterSpacing: AppLetterSpacing.decorative,
         ),
       );
     }
@@ -288,8 +288,8 @@ class _CeziRitualPainter extends CustomPainter {
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleT),
           fontSize: R * 0.22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
     }

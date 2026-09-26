@@ -7,8 +7,8 @@ import sys, hashlib, os, json, shutil, datetime, re
 
 fname = sys.argv[1] if len(sys.argv) > 1 else None
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-builds_dir = os.path.join(project_root, "..", "builds")
-android_dir = os.path.join(builds_dir, "android")  # APK 按平台分类归档
+builds_dir = os.path.join(project_root, "..", "builds", "release")
+android_dir = os.path.join(builds_dir, "android")  # 正式 APK 归档路径
 
 if not fname:
     apks = [f for f in os.listdir(android_dir) if f.startswith("Jeenith_") and f.endswith(".apk")]

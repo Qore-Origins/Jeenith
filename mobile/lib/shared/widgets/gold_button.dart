@@ -6,7 +6,7 @@ import '../../core/config/config_providers.dart';
 import '../../core/theme/animations.dart';
 import '../../core/theme/app_theme.dart';
 
-/// 鎏金主按钮（主题感知）。
+/// Primary action button using the shared jade theme color.
 ///
 /// v2.0.0 升级：按动 0.95 缩放 + 阴影变化，抬起用 [AppAnimations.pressReleaseCurve]
 /// （[Curves.easeOutBack] 变体）弹回——模拟物理弹性，质感来自曲线而非饱和度。
@@ -25,8 +25,8 @@ import '../../core/theme/app_theme.dart';
 /// - tight(W<88) 矛盾下：**降级**，直接返回 box，按可用宽度渲染（防御层）
 /// 详见频发 BUG 文档 `docs/频发BUG/GoldButton竖线坍塌.md`。
 ///
-/// **v2.10.0 主题感知**：颜色全部从 `AppClr.of(context)` 取，浅色模式下自动切换
-/// 为深鎏金（保证对比度），深色模式下保持原黑金。
+/// The historical class name is retained for call-site compatibility; its colors
+/// follow the current theme instead of the previous bright gold gradient.
 ///
 /// 内部自动读 [AppConfig.animationsEnabled]，开关关闭时降级为静态按钮。
 class GoldButton extends ConsumerStatefulWidget {
@@ -40,7 +40,7 @@ class GoldButton extends ConsumerStatefulWidget {
     required this.text,
     this.onPressed,
     this.icon,
-    this.radius = 10,
+    this.radius = AppRadius.button,
   });
 
   @override
@@ -76,25 +76,15 @@ class _GoldButtonState extends ConsumerState<GoldButton>
     final enabled = widget.onPressed != null;
     final animEnabled = _animEnabled;
     final c = AppClr.of(context);
-    // 主题感知色板：浅色取深鎏金（保证对比度），深色取原鎏金
-    final labelColor = c.resolve(const Color(0xFF1A1208), const Color(0xFFF6F0E2));
-    final gradTop = enabled
-        ? c.resolve(const Color(0xFFF0D488), const Color(0xFFB89534))
-        : c.resolve(const Color(0xFF6E5C36), const Color(0xFF8A7A55));
-    final gradBottom = enabled
-        ? c.resolve(const Color(0xFFD4A857), const Color(0xFF9B7A2A))
-        : c.resolve(const Color(0xFF5A4A2A), const Color(0xFF6B5A3A));
-    final borderColor = enabled
-        ? c.resolve(const Color(0xFFE8C87A), const Color(0xFF8A6A1E))
-        : c.resolve(const Color(0xFF4A3E26), const Color(0xFF6B5A3A));
-    final glowColor = c.gold;
+    final labelColor = enabled ? c.onAction : c.textHint;
+    final buttonColor = enabled ? c.jade : c.panel;
+    final borderColor = enabled ? c.jade : c.goldBorder.withValues(alpha: 0.55);
 
     final label = Text(
       widget.text,
-      style: TextStyle(
+      style: context.appTypography.button.copyWith(
         color: labelColor,
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
     final child = widget.icon == null
@@ -110,32 +100,32 @@ class _GoldButtonState extends ConsumerState<GoldButton>
 
     final box = DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [gradTop, gradBottom],
-        ),
+        color: buttonColor,
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: borderColor),
         boxShadow: _down
             ? [
                 BoxShadow(
-                  color: glowColor.withValues(alpha: 0.22),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+                  color: c.jade.withValues(alpha: 0.12),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: AppColors.shadow.withValues(alpha: 0.10),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-        child: child),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.buttonPrimaryHorizontal,
+          vertical: AppSpacing.buttonPrimaryVertical,
+        ),
+        child: child,
+      ),
     );
 
     // ★ v2.10.3 竖线坍塌第 5 次修复（防御层）：
@@ -150,7 +140,8 @@ class _GoldButtonState extends ConsumerState<GoldButton>
     final expandedBox = LayoutBuilder(
       builder: (context, constraints) {
         // 矛盾约束判断：tight + maxWidth<88
-        final isContradiction = constraints.maxWidth.isFinite &&
+        final isContradiction =
+            constraints.maxWidth.isFinite &&
             constraints.maxWidth < 88 &&
             constraints.minWidth == constraints.maxWidth;
         if (isContradiction) {
@@ -171,7 +162,9 @@ class _GoldButtonState extends ConsumerState<GoldButton>
               final t = _press.value;
               final downCurve = AppAnimations.pressDownCurve.transform(t);
               final upCurve = AppAnimations.pressReleaseCurve.transform(1 - t);
-              final scale = _down ? 1.0 - 0.05 * downCurve : 0.95 + 0.05 * upCurve;
+              final scale = _down
+                  ? 1.0 - 0.05 * downCurve
+                  : 0.95 + 0.05 * upCurve;
               return Transform.scale(
                 scale: scale,
                 alignment: Alignment.center,

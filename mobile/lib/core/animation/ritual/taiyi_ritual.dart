@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Qore
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -68,9 +68,9 @@ class _TaiyiRitualState extends RitualAnimationState<TaiyiRitual> {
                   child: Text('太 乙 神 数',
                       style: TextStyle(
                           color: AppColors.goldBright,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 12)),
+                          fontSize: AppFontSize.heading,
+                          fontWeight: AppFontWeight.bold,
+                          letterSpacing: AppLetterSpacing.ritualDisplay)),
                 );
               },
             ),

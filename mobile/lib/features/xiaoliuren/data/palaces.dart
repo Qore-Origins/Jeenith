@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Qore
 import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
+import 'package:jeenith/core/theme/app_theme.dart';
 
 /// 小六壬六宫数据模型（1:1 搬运自 Python main.py PALACES）。
 @immutable
@@ -37,7 +39,7 @@ const palaces = <Palace>[
   Palace(
     name: '大安', wuxing: '木', shen: '青龙', fangwei: '东方',
     jixiong: '大吉', level: 5,
-    color: Color(0xFF3FAE6F), glow: Color(0xFF7FE3AD),
+    color: AppColors.wood, glow: AppColors.woodGlow,
     poem: '大安事事昌，求谋主荣光。',
     meaning: '万事安定，青龙主事。如春木生发，平和顺遂、稳重安泰。占事主平稳、有贵人、宜静守待时。',
     detail: {
@@ -53,7 +55,7 @@ const palaces = <Palace>[
   Palace(
     name: '留连', wuxing: '水', shen: '勾陈', fangwei: '东南',
     jixiong: '小凶', level: 1,
-    color: Color(0xFF6A8AA6), glow: Color(0xFF9BC0DC),
+    color: AppColors.water, glow: AppColors.waterGlow,
     poem: '留连事难成，谋望皆迟滞。',
     meaning: '事多拖延纠缠，勾陈主滞。如水停滞不流，反复难决。占事主迟缓、口舌、暗昧不明，需耐心等待。',
     detail: {
@@ -69,7 +71,7 @@ const palaces = <Palace>[
   Palace(
     name: '速喜', wuxing: '火', shen: '朱雀', fangwei: '南方',
     jixiong: '中吉', level: 4,
-    color: Color(0xFFE85A3C), glow: Color(0xFFFF9077),
+    color: AppColors.fire, glow: AppColors.fireGlow,
     poem: '速喜喜来临，求财到禄位。',
     meaning: '喜事速至，朱雀报信。如烈火烹油，迅捷明快。占事主有喜讯、速成、得财、贵人来助。',
     detail: {
@@ -85,7 +87,7 @@ const palaces = <Palace>[
   Palace(
     name: '赤口', wuxing: '金', shen: '白虎', fangwei: '西方',
     jixiong: '大凶', level: 0,
-    color: Color(0xFFC5CDD8), glow: Color(0xFFEEF2F8),
+    color: AppColors.metal, glow: AppColors.metalGlow,
     poem: '赤口主口舌，是非凶祸生。',
     meaning: '口舌争讼，白虎主凶。如秋金肃杀，冲突锋利。占事主官非、争吵、损伤、破财，宜谨慎防备。',
     detail: {
@@ -101,7 +103,7 @@ const palaces = <Palace>[
   Palace(
     name: '小吉', wuxing: '水', shen: '玄武', fangwei: '北方',
     jixiong: '小吉', level: 3,
-    color: Color(0xFF3A86B8), glow: Color(0xFF74BCE4),
+    color: AppColors.waterDeep, glow: AppColors.waterDeepGlow,
     poem: '小吉最相宜，诸事皆和合。',
     meaning: '小有吉利，玄武藏机。如水流平稳，柔顺通达。占事主小顺、和合、阴人相助，凡事小有成就。',
     detail: {
@@ -117,7 +119,7 @@ const palaces = <Palace>[
   Palace(
     name: '空亡', wuxing: '土', shen: '腾蛇', fangwei: '中央',
     jixiong: '平凶', level: 2,
-    color: Color(0xFFB8924E), glow: Color(0xFFE0BF7E),
+    color: AppColors.earth, glow: AppColors.earthGlow,
     poem: '空亡事不祥，凡谋皆落空。',
     meaning: '虚无落空，腾蛇主惊。如浮云无定，事多虚惊。占事主落空、无果、虚惊一场，宜重新谋划。',
     detail: {

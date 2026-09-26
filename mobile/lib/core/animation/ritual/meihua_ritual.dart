@@ -262,8 +262,8 @@ class _MeihuaRitualPainter extends CustomPainter {
       TextStyle(
         color: AppColors.gold.withValues(alpha: progress * 0.05),
         fontSize: size.shortestSide * 0.22,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 12,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.ritualDisplay,
       ),
     );
   }
@@ -347,7 +347,7 @@ class _MeihuaRitualPainter extends CustomPainter {
       TextStyle(
         color: AppColors.goldBright.withValues(alpha: alpha),
         fontSize: _numFontSize,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
     canvas.restore();
@@ -469,9 +469,9 @@ class _MeihuaRitualPainter extends CustomPainter {
     if (labelT > 0) {
       final style = TextStyle(
         color: AppColors.goldBright.withValues(alpha: labelT * 0.7),
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1,
+        fontSize: AppFontSize.bodyLarge,
+        fontWeight: AppFontWeight.medium,
+        letterSpacing: AppLetterSpacing.subtle,
       );
       _drawText(canvas, p.upName, Offset(cx + _lineW / 2 + 26, ys[4]), style);
       _drawText(canvas, p.loName, Offset(cx + _lineW / 2 + 26, ys[1]), style);
@@ -574,7 +574,7 @@ class _MeihuaRitualPainter extends CustomPainter {
         height: _lineH + 18,
       );
       canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, const Radius.circular(6)),
+        RRect.fromRectAndRadius(rect, const Radius.circular(AppRadius.compactRound)),
         Paint()
           ..shader = RadialGradient(
             colors: [
@@ -602,8 +602,8 @@ class _MeihuaRitualPainter extends CustomPainter {
         Offset(cx - halfW - 22, targetY),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: gAlpha),
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
+          fontSize: AppFontSize.bodySmall,
+          fontWeight: AppFontWeight.bold,
         ),
       );
     }
@@ -654,7 +654,7 @@ class _MeihuaRitualPainter extends CustomPainter {
       final right = cx + _lineW / 2 + pad;
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTRB(left, top, right, bottom),
-        const Radius.circular(10),
+        const Radius.circular(AppRadius.control),
       );
       // Soft fill glow.
       canvas.drawRRect(
@@ -679,9 +679,9 @@ class _MeihuaRitualPainter extends CustomPainter {
         Offset(cx, size.height * 0.85),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleT),
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontSize: AppFontSize.metric,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
     }

@@ -2,8 +2,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -295,9 +295,9 @@ class _RitualPainter extends CustomPainter {
         Offset(cx, cy + outerR + 58),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleA),
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontSize: AppFontSize.metric,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
     }

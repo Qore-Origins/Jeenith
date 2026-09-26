@@ -141,9 +141,9 @@ class _ManualPageState extends State<ManualPage> {
           Text(title,
               style: TextStyle(
                   color: c.gold,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2)),
+                  fontSize: AppFontSize.body,
+                  fontWeight: AppFontWeight.bold,
+                  letterSpacing: AppLetterSpacing.label)),
           const SizedBox(height: 8),
           _panel(body),
         ],
@@ -157,7 +157,7 @@ class _ManualPageState extends State<ManualPage> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: c.panel,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.panelCompact),
         border: Border.all(color: c.goldBorder),
       ),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -175,8 +175,8 @@ class _ManualPageState extends State<ManualPage> {
       child: Text(text,
           style: TextStyle(
               color: c.goldBright,
-              fontSize: 13,
-              fontWeight: FontWeight.bold)),
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold)),
     );
   }
 
@@ -187,9 +187,9 @@ class _ManualPageState extends State<ManualPage> {
       child: Text(text,
           style: TextStyle(
               color: emphasis ? c.goldBright : c.textBody,
-              fontSize: 12,
-              height: 1.6,
-              fontWeight: emphasis ? FontWeight.bold : FontWeight.normal)),
+              fontSize: AppFontSize.label,
+              height: AppLineHeight.reading,
+              fontWeight: emphasis ? AppFontWeight.bold : AppFontWeight.regular)),
     );
   }
 
@@ -201,11 +201,11 @@ class _ManualPageState extends State<ManualPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('· ',
-              style: TextStyle(color: c.gold, fontSize: 12)),
+              style: TextStyle(color: c.gold, fontSize: AppFontSize.label)),
           Expanded(
             child: Text(text,
                 style: TextStyle(
-                    color: c.textBody, fontSize: 12, height: 1.5)),
+                    color: c.textBody, fontSize: AppFontSize.label, height: AppLineHeight.body)),
           ),
         ],
       ),
@@ -222,12 +222,12 @@ class _ManualPageState extends State<ManualPage> {
           Text('$n. $title',
               style: TextStyle(
                   color: c.goldBright,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold)),
+                  fontSize: AppFontSize.bodySmall,
+                  fontWeight: AppFontWeight.bold)),
           const SizedBox(height: 2),
           Text(body,
               style: TextStyle(
-                  color: c.textBody, fontSize: 12, height: 1.5)),
+                  color: c.textBody, fontSize: AppFontSize.label, height: AppLineHeight.body)),
         ],
       ),
     );
@@ -246,15 +246,15 @@ class _ManualPageState extends State<ManualPage> {
               Text('Q：',
                   style: TextStyle(
                       color: c.gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold)),
+                      fontSize: AppFontSize.label,
+                      fontWeight: AppFontWeight.bold)),
               Expanded(
                 child: Text(question,
                     style: TextStyle(
                         color: c.goldBright,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        height: 1.5)),
+                        fontSize: AppFontSize.label,
+                        fontWeight: AppFontWeight.bold,
+                        height: AppLineHeight.body)),
               ),
             ],
           ),
@@ -265,14 +265,14 @@ class _ManualPageState extends State<ManualPage> {
               Text('A：',
                   style: TextStyle(
                       color: c.gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold)),
+                      fontSize: AppFontSize.label,
+                      fontWeight: AppFontWeight.bold)),
               Expanded(
                 child: Text(answer,
                     style: TextStyle(
                         color: c.textBody,
-                        fontSize: 12,
-                        height: 1.6)),
+                        fontSize: AppFontSize.label,
+                        height: AppLineHeight.reading)),
               ),
             ],
           ),
@@ -309,7 +309,7 @@ class _ManualPageState extends State<ManualPage> {
             decoration: BoxDecoration(
               color: i == 0
                   ? c.gold.withValues(alpha: 0.12)
-                  : Colors.transparent,
+                  : AppColors.transparent,
             ),
             children: [
               for (final cell in rows[i])
@@ -321,10 +321,10 @@ class _ManualPageState extends State<ManualPage> {
                           color: i == 0
                               ? c.goldBright
                               : c.textBody,
-                          fontSize: 11,
+                          fontSize: AppFontSize.caption,
                           fontWeight:
-                              i == 0 ? FontWeight.bold : FontWeight.normal,
-                          height: 1.3)),
+                              i == 0 ? AppFontWeight.bold : AppFontWeight.regular,
+                          height: AppLineHeight.navigation)),
                 ),
             ],
           ),

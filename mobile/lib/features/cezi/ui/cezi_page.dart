@@ -15,6 +15,7 @@ import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/dark_button.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 
@@ -28,6 +29,7 @@ class CeziPage extends ConsumerStatefulWidget {
 class _CeziPageState extends ConsumerState<CeziPage> {
   final _ctrl = TextEditingController();
   CeziResult? _last;
+  HistoryEntry? _resultHistoryEntry;
   String? _error;
   final GlobalKey _boundaryKey = GlobalKey();
   static final _hanRegex = RegExp(r'^[\u4e00-\u9fa5]$');
@@ -48,6 +50,7 @@ class _CeziPageState extends ConsumerState<CeziPage> {
     setState(() {
       _ctrl.text = ch;
       _last = divine(ch);
+      _resultHistoryEntry = restore;
       _error = null;
     });
   }
@@ -75,7 +78,7 @@ class _CeziPageState extends ConsumerState<CeziPage> {
       _last = result;
       _error = null;
     });
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'cezi',
       techName: '测字',
@@ -83,12 +86,15 @@ class _CeziPageState extends ConsumerState<CeziPage> {
       summary: '「$ch」${result.strokes}画 · ${result.wuxing.label}',
       detail: _buildCopyText(result),
       extra: {'char': ch},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _onReset() {
     setState(() {
       _last = null;
+      _resultHistoryEntry = null;
       _error = null;
       _ctrl.clear();
     });
@@ -105,12 +111,15 @@ class _CeziPageState extends ConsumerState<CeziPage> {
         ),
         title: Column(
           children: [
-            const Text('测　字', style: TextStyle(fontSize: 18)),
-            Text('一 字 一 玄 机',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('测　字', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '一 字 一 玄 机',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -126,12 +135,15 @@ class _CeziPageState extends ConsumerState<CeziPage> {
                   children: [
                     Icon(Icons.edit, color: c.goldBright, size: 16),
                     const SizedBox(width: 6),
-                    Text('请输入一个汉字',
-                        style: TextStyle(
-                            color: c.goldBright,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2)),
+                    Text(
+                      '请输入一个汉字',
+                      style: TextStyle(
+                        color: c.goldBright,
+                        fontSize: AppFontSize.bodySmall,
+                        fontWeight: AppFontWeight.bold,
+                        letterSpacing: AppLetterSpacing.label,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -141,8 +153,8 @@ class _CeziPageState extends ConsumerState<CeziPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: c.textPrimary,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppFontSize.display,
+                    fontWeight: AppFontWeight.bold,
                   ),
                   decoration: const InputDecoration(
                     hintText: '字',
@@ -155,7 +167,10 @@ class _CeziPageState extends ConsumerState<CeziPage> {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       _error!,
-                      style: TextStyle(color: c.gradeBad, fontSize: 12),
+                      style: TextStyle(
+                        color: c.gradeBad,
+                        fontSize: AppFontSize.label,
+                      ),
                     ),
                   ),
               ],
@@ -186,9 +201,10 @@ class _CeziPageState extends ConsumerState<CeziPage> {
           ),
           const SizedBox(height: 16),
           if (_last != null)
-            RepaintBoundary(
-              key: _boundaryKey,
-              child: _buildResult(_last!),
+            RepaintBoundary(key: _boundaryKey, child: _buildResult(_last!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
             ),
           const SizedBox(height: 12),
           DecorativePanel(
@@ -196,22 +212,49 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('◆ 测字要诀',
-                    style: TextStyle(
-                        color: c.goldBright,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2)),
+                Text(
+                  '◆ 测字要诀',
+                  style: TextStyle(
+                    color: c.goldBright,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.label,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('1. 凝神静气，默念所问之事。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
-                Text('2. 心中浮现一个字，输入此字。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
-                Text('3. 拆字笔画 → 五行属性 → 断语吉凶。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
+                Text(
+                  '1. 凝神静气，默念所问之事。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
+                Text(
+                  '2. 心中浮现一个字，输入此字。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
+                Text(
+                  '3. 拆字笔画 → 五行属性 → 断语吉凶。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('注：笔画按传统康熙字典体计；未收录字按 unicode 哈希估算。',
-                    style: TextStyle(color: c.textHint, fontSize: 10, height: 1.5)),
+                Text(
+                  '注：笔画按传统康熙字典体计；未收录字按 unicode 哈希估算。',
+                  style: TextStyle(
+                    color: c.textHint,
+                    fontSize: AppFontSize.micro,
+                    height: AppLineHeight.body,
+                  ),
+                ),
               ],
             ),
           ),
@@ -224,7 +267,11 @@ class _CeziPageState extends ConsumerState<CeziPage> {
     final wxColor = _colorForWuxing(r.wuxing);
     final c = AppClr.of(context);
     final enabled =
-        ref.watch(configProvider).valueOrNull?.isAnimationEnabled('cezi', AnimationKind.reveal) ?? true;
+        ref
+            .watch(configProvider)
+            .valueOrNull
+            ?.isAnimationEnabled('cezi', AnimationKind.reveal) ??
+        true;
     return DecorativePanel(
       padding: const EdgeInsets.all(16),
       child: RevealAnimation(
@@ -236,16 +283,19 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             height: 110,
             decoration: BoxDecoration(
               color: c.bgMid.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: wxColor.withValues(alpha: 0.6), width: 2),
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              border: Border.all(
+                color: wxColor.withValues(alpha: 0.6),
+                width: 2,
+              ),
             ),
             alignment: Alignment.center,
             child: Text(
               r.inputChar,
               style: TextStyle(
                 color: c.textHighlight,
-                fontSize: 64,
-                fontWeight: FontWeight.bold,
+                fontSize: AppFontSize.ritualLarge,
+                fontWeight: AppFontWeight.bold,
               ),
             ),
           ),
@@ -264,8 +314,8 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             r.strokeAnalysis,
             style: TextStyle(
               color: c.textBody,
-              fontSize: 13,
-              height: 1.6,
+              fontSize: AppFontSize.bodySmall,
+              height: AppLineHeight.reading,
             ),
           ),
           _sectionLabel('断语诗'),
@@ -273,7 +323,7 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
             decoration: BoxDecoration(
               color: c.bgMid.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               border: Border.all(color: c.goldBorder),
             ),
             child: Text(
@@ -281,9 +331,9 @@ class _CeziPageState extends ConsumerState<CeziPage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: c.textPrimary,
-                fontSize: 14,
-                height: 1.8,
-                letterSpacing: 1,
+                fontSize: AppFontSize.body,
+                height: AppLineHeight.ritual,
+                letterSpacing: AppLetterSpacing.subtle,
               ),
             ),
           ),
@@ -292,8 +342,8 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             r.interpretation,
             style: TextStyle(
               color: c.textBody,
-              fontSize: 13,
-              height: 1.6,
+              fontSize: AppFontSize.bodySmall,
+              height: AppLineHeight.reading,
             ),
           ),
           _sectionLabel('详注'),
@@ -301,15 +351,18 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             r.detail,
             style: TextStyle(
               color: c.textMeta,
-              fontSize: 12,
-              height: 1.6,
-              letterSpacing: 1,
+              fontSize: AppFontSize.label,
+              height: AppLineHeight.reading,
+              letterSpacing: AppLetterSpacing.subtle,
             ),
           ),
           Center(
             child: Text(
               '${r.time.toString().substring(0, 19)} 测得',
-              style: TextStyle(color: c.textHint, fontSize: 11),
+              style: TextStyle(
+                color: c.textHint,
+                fontSize: AppFontSize.caption,
+              ),
             ),
           ),
         ],
@@ -323,23 +376,27 @@ class _CeziPageState extends ConsumerState<CeziPage> {
       children: [
         Text(
           label,
-          style: TextStyle(color: c.textSubtitle, fontSize: 11, letterSpacing: 2),
+          style: TextStyle(
+            color: c.textSubtitle,
+            fontSize: AppFontSize.caption,
+            letterSpacing: AppLetterSpacing.label,
+          ),
         ),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.18),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
             border: Border.all(color: color.withValues(alpha: 0.5)),
           ),
           child: Text(
             value,
             style: TextStyle(
               color: color,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.subtle,
             ),
           ),
         ),
@@ -359,9 +416,9 @@ class _CeziPageState extends ConsumerState<CeziPage> {
             text,
             style: TextStyle(
               color: c.goldBright,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
             ),
           ),
         ],

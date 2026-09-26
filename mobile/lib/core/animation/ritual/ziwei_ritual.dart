@@ -218,8 +218,8 @@ class _ZiweiRitualPainter extends CustomPainter {
           TextStyle(
             color: AppColors.goldBright.withValues(alpha: nameT * 0.85),
             fontSize: R * 0.075,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1,
+            fontWeight: AppFontWeight.medium,
+            letterSpacing: AppLetterSpacing.subtle,
           ),
         );
       }
@@ -309,7 +309,7 @@ class _ZiweiRitualPainter extends CustomPainter {
           TextStyle(
             color: AppColors.goldBright.withValues(alpha: labelAlpha * 0.9),
             fontSize: R * 0.055,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppFontWeight.medium,
           ),
         );
       }
@@ -345,8 +345,8 @@ class _ZiweiRitualPainter extends CustomPainter {
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: textT),
           fontSize: R * 0.16,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 6,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.display,
         ),
       );
     }

@@ -19,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 import '../algorithm/liu_nian.dart';
@@ -39,6 +40,7 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
   final _day = TextEditingController();
   final _hour = TextEditingController();
   ZiweiResult? _r;
+  HistoryEntry? _resultHistoryEntry;
   bool _isMale = true; // 性别：决定大限顺逆
   final GlobalKey _boundaryKey = GlobalKey();
   final GlobalKey _chartKey = GlobalKey();
@@ -67,8 +69,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _liuNianYearCtrl =
-        TextEditingController(text: DateTime.now().year.toString());
+    _liuNianYearCtrl = TextEditingController(
+      text: DateTime.now().year.toString(),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeRestore();
       _maybeShowTechGuide();
@@ -119,6 +122,7 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       _day.text = d.toString();
       _hour.text = h.toString();
       _r = divine(y, m, d, h, isMale: male);
+      _resultHistoryEntry = restore;
     });
     _chartAnim.forward(from: 0);
   }
@@ -142,7 +146,8 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
     final berr = validateBirth(y, m, d, h);
     if (berr != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating));
+        SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating),
+      );
       return;
     }
     setState(() {
@@ -156,7 +161,8 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       }
     });
     // 触发命盘绘制过程动画（受 painter kind 开关控制）
-    final painterOn = ref
+    final painterOn =
+        ref
             .read(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('ziwei', AnimationKind.painter) ??
@@ -167,7 +173,7 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       _chartAnim.value = 1.0; // 关闭动画时直接完成绘制
     }
     FocusScope.of(context).unfocus();
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'ziwei',
       techName: '紫微斗数',
@@ -175,7 +181,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       summary: _r?.wuxingJu ?? '',
       detail: _buildCopyText(),
       extra: {'year': y, 'month': m, 'day': d, 'hour': h, 'isMale': _isMale},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   /// 切换流年显示（v2.12.0）。
@@ -262,26 +270,27 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
     if (stopSeconds < 0.3) stopSeconds = 0.3;
     if (stopSeconds > 3.0) stopSeconds = 3.0;
     final durationSeconds = stopSeconds;
-    _inertiaCtrl = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: (durationSeconds * 1000).round()),
-    )
-      ..addListener(() {
-        final sim = _frictionSim;
-        final ctrl = _inertiaCtrl;
-        if (sim == null || ctrl == null) return;
-        setState(() {
-          _rotationAngle = sim.x(durationSeconds * ctrl.value);
-        });
-      })
-      ..addStatusListener((status) {
-        if (status == AnimationStatus.completed) {
-          _inertiaCtrl?.dispose();
-          _inertiaCtrl = null;
-          _frictionSim = null;
-        }
-      })
-      ..forward();
+    _inertiaCtrl =
+        AnimationController(
+            vsync: this,
+            duration: Duration(milliseconds: (durationSeconds * 1000).round()),
+          )
+          ..addListener(() {
+            final sim = _frictionSim;
+            final ctrl = _inertiaCtrl;
+            if (sim == null || ctrl == null) return;
+            setState(() {
+              _rotationAngle = sim.x(durationSeconds * ctrl.value);
+            });
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed) {
+              _inertiaCtrl?.dispose();
+              _inertiaCtrl = null;
+              _frictionSim = null;
+            }
+          })
+          ..forward();
   }
 
   @override
@@ -295,10 +304,15 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
         ),
         title: Column(
           children: [
-            const Text('紫微斗数', style: TextStyle(fontSize: 18)),
-            Text('命 盘 排 盘',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('紫微斗数', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '命 盘 排 盘',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -310,8 +324,13 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('公历生辰（年 月 日 时 0-23）',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '公历生辰（年 月 日 时 0-23）',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -327,17 +346,26 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text('性别',
-                        style: TextStyle(color: c.textBody, fontSize: 12)),
+                    Text(
+                      '性别',
+                      style: TextStyle(
+                        color: c.textBody,
+                        fontSize: AppFontSize.label,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     _genderChip('男', true),
                     const SizedBox(width: 6),
                     _genderChip('女', false),
                     const Spacer(),
                     if (_r != null)
-                      Text('大限${_r!.daxianForward ? "顺行" : "逆行"}',
-                          style: TextStyle(
-                              color: c.fireGlow, fontSize: 10)),
+                      Text(
+                        '大限${_r!.daxianForward ? "顺行" : "逆行"}',
+                        style: TextStyle(
+                          color: c.fireGlow,
+                          fontSize: AppFontSize.micro,
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -346,7 +374,10 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                 Row(
                   children: [
                     Expanded(
-                      child: CopyResultButton(text: _buildCopyText(), enabled: _r != null),
+                      child: CopyResultButton(
+                        text: _buildCopyText(),
+                        enabled: _r != null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -364,6 +395,10 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
           const SizedBox(height: 14),
           if (_r != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_r!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 10),
         ],
       ),
@@ -371,10 +406,10 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
   }
 
   Widget _f(TextEditingController c, String hint) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint, isDense: true),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(hintText: hint, isDense: true),
+  );
 
   /// 性别选择 chip（男/女），决定大限行运方向。
   Widget _genderChip(String label, bool male) {
@@ -385,16 +420,20 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? c.gold.withValues(alpha: 0.18) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: selected
+              ? c.gold.withValues(alpha: 0.18)
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.compactRound),
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
-        child: Text(label,
-            style: TextStyle(
-              color: selected ? c.goldBright : c.textBody,
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? c.goldBright : c.textBody,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
+          ),
+        ),
       ),
     );
   }
@@ -402,7 +441,8 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
   Widget _buildResult(ZiweiResult r) {
     const dz = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('ziwei', AnimationKind.reveal) ??
@@ -415,35 +455,51 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(r.lunarDisplay,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              r.lunarDisplay,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('八字：${r.bazi}',
-                style: TextStyle(
-                    color: c.textBody, fontSize: 13)),
+            Text(
+              '八字：${r.bazi}',
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.bodySmall,
+              ),
+            ),
             const SizedBox(height: 4),
             Row(
               children: [
-                Text('命宫：${r.mingGanZhi}（${dz[r.mingGong]}）',
-                    style: TextStyle(
-                        color: c.gold,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '命宫：${r.mingGanZhi}（${dz[r.mingGong]}）',
+                  style: TextStyle(
+                    color: c.gold,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Text('身宫：${dz[r.shenGong]}',
-                    style: TextStyle(
-                        color: c.waterDeepGlow,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '身宫：${dz[r.shenGong]}',
+                  style: TextStyle(
+                    color: c.waterDeepGlow,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
-                Text(r.wuxingJu,
-                    style: TextStyle(
-                        color: c.fireGlow,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  r.wuxingJu,
+                  style: TextStyle(
+                    color: c.fireGlow,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ],
@@ -451,12 +507,15 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
       ),
       sections: [
         _buildLiuNianBar(c),
-        Text('◆ 命盘星图',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 命盘星图',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(8),
           child: SizedBox(
@@ -497,22 +556,30 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
             ),
           ),
         ),
-        Text('指尖拖拽可旋转命盘',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: c.textHint, fontSize: 11)),
-        Text('◆ 生年四化',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '指尖拖拽可旋转命盘',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: c.textHint, fontSize: AppFontSize.caption),
+        ),
+        Text(
+          '◆ 生年四化',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildSihuaPanel(r),
-        Text('◆ 宫位详情',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 宫位详情',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -530,12 +597,15 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
           ],
         ),
         if (_showLiuNian && _liuNian != null) ...[
-          Text('◆ 流年运势 · ${_liuNian!.ganZhi}（虚岁 ${_liuNian!.xuSui}）',
-              style: TextStyle(
-                  color: c.fireGlow,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2)),
+          Text(
+            '◆ 流年运势 · ${_liuNian!.ganZhi}（虚岁 ${_liuNian!.xuSui}）',
+            style: TextStyle(
+              color: c.fireGlow,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
+            ),
+          ),
           _buildLiuNianPanel(r, _liuNian!, c),
         ],
       ],
@@ -551,11 +621,14 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
         children: [
           Row(
             children: [
-              Text('流年运势',
-                  style: TextStyle(
-                      color: c.goldBright,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                '流年运势',
+                style: TextStyle(
+                  color: c.goldBright,
+                  fontSize: AppFontSize.bodySmall,
+                  fontWeight: AppFontWeight.bold,
+                ),
+              ),
               const Spacer(),
               Switch(
                 value: _showLiuNian,
@@ -568,7 +641,13 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
             const SizedBox(height: 4),
             Row(
               children: [
-                Text('流年', style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '流年',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 SizedBox(
                   width: 76,
@@ -576,8 +655,13 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                     controller: _liuNianYearCtrl,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                        hintText: '年份', isDense: true),
-                    style: TextStyle(color: c.textPrimary, fontSize: 13),
+                      hintText: '年份',
+                      isDense: true,
+                    ),
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: AppFontSize.bodySmall,
+                    ),
                     onSubmitted: (_) => _refreshLiuNian(),
                   ),
                 ),
@@ -589,16 +673,21 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                 ),
                 const Spacer(),
                 if (_liuNian != null)
-                  Text('${_liuNian!.ganZhi} · 虚岁${_liuNian!.xuSui}',
-                      style: TextStyle(
-                          color: c.fireGlow,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    '${_liuNian!.ganZhi} · 虚岁${_liuNian!.xuSui}',
+                    style: TextStyle(
+                      color: c.fireGlow,
+                      fontSize: AppFontSize.label,
+                      fontWeight: AppFontWeight.bold,
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 6),
-            Text('红框 = 流年命宫　蓝框 = 小限宫',
-                style: TextStyle(color: c.textHint, fontSize: 10)),
+            Text(
+              '红框 = 流年命宫　蓝框 = 小限宫',
+              style: TextStyle(color: c.textHint, fontSize: AppFontSize.micro),
+            ),
           ],
         ],
       ),
@@ -619,11 +708,22 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('· ', style: TextStyle(color: c.fireGlow, fontSize: 12)),
+                  Text(
+                    '· ',
+                    style: TextStyle(
+                      color: c.fireGlow,
+                      fontSize: AppFontSize.label,
+                    ),
+                  ),
                   Expanded(
-                    child: Text(p,
-                        style: TextStyle(
-                            color: c.textBody, fontSize: 12, height: 1.6)),
+                    child: Text(
+                      p,
+                      style: TextStyle(
+                        color: c.textBody,
+                        fontSize: AppFontSize.label,
+                        height: AppLineHeight.reading,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -648,7 +748,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
   }
 
   /// 收集年干四化的 4 颗星及其宫位（地支 + 宫名）。
-  Map<SiHua, ({String star, int zhi, String gong})> _collectSihua(ZiweiResult r) {
+  Map<SiHua, ({String star, int zhi, String gong})> _collectSihua(
+    ZiweiResult r,
+  ) {
     final out = <SiHua, ({String star, int zhi, String gong})>{};
     for (var zhi = 0; zhi < 12; zhi++) {
       for (final sp in r.stars.gongStars[zhi]) {
@@ -657,7 +759,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
           out[sp.sihua!] = (
             star: sp.name,
             zhi: zhi,
-            gong: (gIdx >= 0 && gIdx < palaceNames.length) ? palaceNames[gIdx] : '—',
+            gong: (gIdx >= 0 && gIdx < palaceNames.length)
+                ? palaceNames[gIdx]
+                : '—',
           );
         }
       }
@@ -684,32 +788,43 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: _siHuaColor(sh, c).withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppRadius.compact),
                         border: Border.all(color: _siHuaColor(sh, c)),
                       ),
-                      child: Text(sh.name,
-                          style: TextStyle(
-                              color: _siHuaColor(sh, c),
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold)),
+                      child: Text(
+                        sh.name,
+                        style: TextStyle(
+                          color: _siHuaColor(sh, c),
+                          fontSize: AppFontSize.label,
+                          fontWeight: AppFontWeight.bold,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       '${collected[sh]!.star} · ${collected[sh]!.gong}（${dz[collected[sh]!.zhi]}）',
                       style: TextStyle(
-                          color: c.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold),
+                        color: c.textPrimary,
+                        fontSize: AppFontSize.label,
+                        fontWeight: AppFontWeight.bold,
+                      ),
                     ),
                     const Spacer(),
                     Flexible(
-                      child: Text(sh.meaning,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                              color: c.textSubtitle, fontSize: 10, height: 1.3)),
+                      child: Text(
+                        sh.meaning,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: c.textSubtitle,
+                          fontSize: AppFontSize.micro,
+                          height: AppLineHeight.navigation,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -729,16 +844,27 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
   }
 
   /// 单行宫位详情：地支 + 宫名 + 主星 + 吉星 + 煞星 + 神煞 + 大限年龄 + 长生。
-  Widget _buildGongDetailRow(int zhi, String zhiName, int gongIdx, int ming,
-      int shen, List<StarPlacement> stars,
-      {String? daxianLabel, String? changSheng}) {
+  Widget _buildGongDetailRow(
+    int zhi,
+    String zhiName,
+    int gongIdx,
+    int ming,
+    int shen,
+    List<StarPlacement> stars, {
+    String? daxianLabel,
+    String? changSheng,
+  }) {
     final isMing = zhi == ming;
     final isShen = zhi == shen;
-    final gongName = (gongIdx >= 0 && gongIdx < palaceNames.length) ? palaceNames[gongIdx] : '';
+    final gongName = (gongIdx >= 0 && gongIdx < palaceNames.length)
+        ? palaceNames[gongIdx]
+        : '';
     final c = AppClr.of(context);
 
-    String joinByCategory(StarCategory cat) =>
-        stars.where((s) => s.category == cat).map((s) => s.sihua != null ? '${s.name}·${s.sihua!.label}' : s.name).join(' ');
+    String joinByCategory(StarCategory cat) => stars
+        .where((s) => s.category == cat)
+        .map((s) => s.sihua != null ? '${s.name}·${s.sihua!.label}' : s.name)
+        .join(' ');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -747,12 +873,13 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
         color: isMing
             ? c.gold.withValues(alpha: 0.12)
             : (isShen ? c.waterDeep.withValues(alpha: 0.12) : c.card),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(
-            color: isMing
-                ? c.goldBorder
-                : (isShen ? c.waterDeepGlow : c.goldBorder),
-            width: 1),
+          color: isMing
+              ? c.goldBorder
+              : (isShen ? c.waterDeepGlow : c.goldBorder),
+          width: 1,
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -764,33 +891,52 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
               children: [
                 Row(
                   children: [
-                    Text(zhiName,
-                        style: TextStyle(
-                            color: isMing ? c.goldBright : c.textMeta,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      zhiName,
+                      style: TextStyle(
+                        color: isMing ? c.goldBright : c.textMeta,
+                        fontSize: AppFontSize.body,
+                        fontWeight: AppFontWeight.bold,
+                      ),
+                    ),
                     if (isMing || isShen)
                       Padding(
                         padding: const EdgeInsets.only(left: 4),
-                        child: Text(isMing ? '命' : '身',
-                            style: TextStyle(
-                                color: isMing ? c.gold : c.waterDeepGlow,
-                                fontSize: 10)),
+                        child: Text(
+                          isMing ? '命' : '身',
+                          style: TextStyle(
+                            color: isMing ? c.gold : c.waterDeepGlow,
+                            fontSize: AppFontSize.micro,
+                          ),
+                        ),
                       ),
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(gongName,
-                    style: TextStyle(
-                        color: isMing ? c.gold : c.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  gongName,
+                  style: TextStyle(
+                    color: isMing ? c.gold : c.textPrimary,
+                    fontSize: AppFontSize.caption,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
                 if (daxianLabel != null)
-                  Text(daxianLabel,
-                      style: TextStyle(color: c.fireGlow, fontSize: 9)),
+                  Text(
+                    daxianLabel,
+                    style: TextStyle(
+                      color: c.fireGlow,
+                      fontSize: AppFontSize.footnote,
+                    ),
+                  ),
                 if (changSheng != null && changSheng.isNotEmpty)
-                  Text(changSheng,
-                      style: TextStyle(color: c.woodGlow, fontSize: 9)),
+                  Text(
+                    changSheng,
+                    style: TextStyle(
+                      color: c.woodGlow,
+                      fontSize: AppFontSize.footnote,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -802,30 +948,61 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
                 if (joinByCategory(StarCategory.main).isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(joinByCategory(StarCategory.main),
-                        style: TextStyle(color: c.goldBright, fontSize: 12, fontWeight: FontWeight.bold, height: 1.4)),
+                    child: Text(
+                      joinByCategory(StarCategory.main),
+                      style: TextStyle(
+                        color: c.goldBright,
+                        fontSize: AppFontSize.label,
+                        fontWeight: AppFontWeight.bold,
+                        height: AppLineHeight.compactBody,
+                      ),
+                    ),
                   ),
                 if (joinByCategory(StarCategory.auspicious).isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text('吉：${joinByCategory(StarCategory.auspicious)}',
-                        style: TextStyle(color: c.woodGlow, fontSize: 11, height: 1.4)),
+                    child: Text(
+                      '吉：${joinByCategory(StarCategory.auspicious)}',
+                      style: TextStyle(
+                        color: c.woodGlow,
+                        fontSize: AppFontSize.caption,
+                        height: AppLineHeight.compactBody,
+                      ),
+                    ),
                   ),
                 if (joinByCategory(StarCategory.malefic).isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text('煞：${joinByCategory(StarCategory.malefic)}',
-                        style: TextStyle(color: c.fireGlow, fontSize: 11, height: 1.4)),
+                    child: Text(
+                      '煞：${joinByCategory(StarCategory.malefic)}',
+                      style: TextStyle(
+                        color: c.fireGlow,
+                        fontSize: AppFontSize.caption,
+                        height: AppLineHeight.compactBody,
+                      ),
+                    ),
                   ),
                 if (joinByCategory(StarCategory.boshishen).isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(joinByCategory(StarCategory.boshishen),
-                        style: TextStyle(color: c.textSubtitle, fontSize: 10, height: 1.4)),
+                    child: Text(
+                      joinByCategory(StarCategory.boshishen),
+                      style: TextStyle(
+                        color: c.textSubtitle,
+                        fontSize: AppFontSize.micro,
+                        height: AppLineHeight.compactBody,
+                      ),
+                    ),
                   ),
                 if (joinByCategory(StarCategory.shensha).isNotEmpty)
-                  Text(joinByCategory(StarCategory.shensha),
-                      style: TextStyle(color: c.earthGlow, fontSize: 10, height: 1.4)),
+                  Text(
+                    joinByCategory(StarCategory.shensha),
+                    style: TextStyle(
+                      color: c.earthGlow,
+                      fontSize: AppFontSize.micro,
+                      height: AppLineHeight.compactBody,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -843,7 +1020,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
     sb.writeln(r.lunarDisplay);
     sb.writeln('八字：${r.bazi}');
-    sb.writeln('命宫：${r.mingGanZhi}（${dz[r.mingGong]}）  身宫：${dz[r.shenGong]}  ${r.wuxingJu}');
+    sb.writeln(
+      '命宫：${r.mingGanZhi}（${dz[r.mingGong]}）  身宫：${dz[r.shenGong]}  ${r.wuxingJu}',
+    );
 
     String starLabel(StarPlacement s) =>
         s.sihua != null ? '${s.name}·${s.sihua!.label}' : s.name;
@@ -855,7 +1034,9 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
     for (final sh in order) {
       final v = collected[sh];
       if (v != null) {
-        sb.writeln('${sh.name}：${v.star} 居 ${v.gong}（${dz[v.zhi]}）—— ${sh.meaning}');
+        sb.writeln(
+          '${sh.name}：${v.star} 居 ${v.gong}（${dz[v.zhi]}）—— ${sh.meaning}',
+        );
       }
     }
 
@@ -871,13 +1052,30 @@ class _ZiweiPageState extends ConsumerState<ZiweiPage>
     sb.writeln('\n—— 十二宫星曜 ——');
     for (var zhi = 0; zhi < 12; zhi++) {
       final g = r.gongAtZhi[zhi];
-      final gongName = (g >= 0 && g < palaceNames.length) ? palaceNames[g] : '—';
+      final gongName = (g >= 0 && g < palaceNames.length)
+          ? palaceNames[g]
+          : '—';
       final stars = r.stars.gongStars[zhi];
-      final main = stars.where((s) => s.category == StarCategory.main).map(starLabel).join(' ');
-      final aus = stars.where((s) => s.category == StarCategory.auspicious).map(starLabel).join(' ');
-      final mal = stars.where((s) => s.category == StarCategory.malefic).map(starLabel).join(' ');
-      final bos = stars.where((s) => s.category == StarCategory.boshishen).map(starLabel).join(' ');
-      final sha = stars.where((s) => s.category == StarCategory.shensha).map(starLabel).join(' ');
+      final main = stars
+          .where((s) => s.category == StarCategory.main)
+          .map(starLabel)
+          .join(' ');
+      final aus = stars
+          .where((s) => s.category == StarCategory.auspicious)
+          .map(starLabel)
+          .join(' ');
+      final mal = stars
+          .where((s) => s.category == StarCategory.malefic)
+          .map(starLabel)
+          .join(' ');
+      final bos = stars
+          .where((s) => s.category == StarCategory.boshishen)
+          .map(starLabel)
+          .join(' ');
+      final sha = stars
+          .where((s) => s.category == StarCategory.shensha)
+          .map(starLabel)
+          .join(' ');
       sb.writeln('${dz[zhi]}宫（$gongName）· ${r.changShengAtZhi[zhi]}：');
       if (main.isNotEmpty) sb.writeln('  主星：$main');
       if (aus.isNotEmpty) sb.writeln('  吉星：$aus');

@@ -15,6 +15,7 @@ import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/entrance_item.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../../../shared/widgets/svg_icon.dart';
 import '../algorithm/divine.dart';
@@ -31,6 +32,7 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
   final _c1 = TextEditingController();
   final _c2 = TextEditingController();
   MeihuaResult? _result;
+  HistoryEntry? _resultHistoryEntry;
   List<int>? _inputs;
   late final AnimationController _anim;
   final GlobalKey _boundaryKey = GlobalKey();
@@ -56,6 +58,7 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
     setState(() {
       _result = divine(n1, n2);
       _inputs = [n1, n2];
+      _resultHistoryEntry = restore;
     });
     _anim.forward(from: 0);
   }
@@ -75,7 +78,7 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       _inputs = [n1, n2];
     });
     _anim.forward(from: 0);
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'meihua',
       techName: '梅花易数',
@@ -83,7 +86,9 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       summary: _result?.benName ?? '',
       detail: _buildCopyText(),
       extra: {'n1': n1, 'n2': n2},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _onDivine() {
@@ -100,7 +105,7 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       _inputs = [n1, n2];
     });
     _anim.forward(from: 0);
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'meihua',
       techName: '梅花易数',
@@ -108,7 +113,9 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       summary: _result?.benName ?? '',
       detail: _buildCopyText(),
       extra: {'n1': n1, 'n2': n2},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   @override
@@ -122,12 +129,15 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
         ),
         title: Column(
           children: [
-            const Text('梅花易数', style: TextStyle(fontSize: 18)),
-            Text('数 字 起 卦',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('梅花易数', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '数 字 起 卦',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -139,17 +149,26 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('输入两个正整数（任意可见之数：时辰、字数、人数…）',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '输入两个正整数（任意可见之数：时辰、字数、人数…）',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(child: _numField(_c1, '上卦数')),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('·',
-                          style: TextStyle(
-                              color: c.gold, fontSize: 20)),
+                      child: Text(
+                        '·',
+                        style: TextStyle(
+                          color: c.gold,
+                          fontSize: AppFontSize.wordmark,
+                        ),
+                      ),
                     ),
                     Expanded(child: _numField(_c2, '下卦数')),
                   ],
@@ -166,7 +185,10 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
                 Row(
                   children: [
                     Expanded(
-                      child: CopyResultButton(text: _buildCopyText(), enabled: _result != null),
+                      child: CopyResultButton(
+                        text: _buildCopyText(),
+                        enabled: _result != null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -184,17 +206,21 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
           const SizedBox(height: 16),
           if (_result != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_result!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
         ],
       ),
     );
   }
 
   Widget _numField(TextEditingController c, String hint) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint, isDense: true),
-        onSubmitted: (_) => _onDivine(),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(hintText: hint, isDense: true),
+    onSubmitted: (_) => _onDivine(),
+  );
 
   Widget _buildResult(MeihuaResult r) {
     final c = AppClr.of(context);
@@ -207,11 +233,14 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
             interval: const Interval(0.0, 0.22),
             child: DecorativePanel(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text('取数 ${_inputs![0]} · ${_inputs![1]}',
-                  style: TextStyle(
-                      color: c.goldBright,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold)),
+              child: Text(
+                '取数 ${_inputs![0]} · ${_inputs![1]}',
+                style: TextStyle(
+                  color: c.goldBright,
+                  fontSize: AppFontSize.bodySmall,
+                  fontWeight: AppFontWeight.bold,
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 12),
@@ -219,11 +248,14 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
           animation: _anim,
           interval: const Interval(0.08, 0.34),
           child: Center(
-            child: Text(r.benName,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 60,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              r.benName,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.ritual,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 4),
@@ -231,9 +263,14 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
           animation: _anim,
           interval: const Interval(0.18, 0.42),
           child: Center(
-            child: Text('${xiang[r.upName]}${xiang[r.loName]}${r.benName}',
-                style: TextStyle(
-                    color: c.gold, fontSize: 16, letterSpacing: 4)),
+            child: Text(
+              '${xiang[r.upName]}${xiang[r.loName]}${r.benName}',
+              style: TextStyle(
+                color: c.gold,
+                fontSize: AppFontSize.bodyLarge,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -250,14 +287,21 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('动爻',
-                        style: TextStyle(
-                            color: c.textSubtitle, fontSize: 11)),
-                    Text('第${_posLabel(r.dong)}爻',
-                        style: TextStyle(
-                            color: c.changing,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
+                    Text(
+                      '动爻',
+                      style: TextStyle(
+                        color: c.textSubtitle,
+                        fontSize: AppFontSize.caption,
+                      ),
+                    ),
+                    Text(
+                      '第${_posLabel(r.dong)}爻',
+                      style: TextStyle(
+                        color: c.changing,
+                        fontSize: AppFontSize.bodyLarge,
+                        fontWeight: AppFontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -273,15 +317,22 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('体卦 ${r.tiName}　·　用卦 ${r.yongName}',
-                    style: TextStyle(
-                        color: c.textBody, fontSize: 13)),
+                Text(
+                  '体卦 ${r.tiName}　·　用卦 ${r.yongName}',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.bodySmall,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Text('→ 之卦 ${r.bianName}',
-                    style: TextStyle(
-                        color: c.changing,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '→ 之卦 ${r.bianName}',
+                  style: TextStyle(
+                    color: c.changing,
+                    fontSize: AppFontSize.body,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -333,22 +384,35 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: titleColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           if (ci.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(ci,
-                style: TextStyle(
-                    color: c.textBody, fontSize: 14, height: 1.6)),
+            Text(
+              ci,
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.body,
+                height: AppLineHeight.reading,
+              ),
+            ),
           ],
           if (note.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(note,
-                style: TextStyle(
-                    color: c.textSubtitle, fontSize: 12, height: 1.5)),
+            Text(
+              note,
+              style: TextStyle(
+                color: c.textSubtitle,
+                fontSize: AppFontSize.label,
+                height: AppLineHeight.body,
+              ),
+            ),
           ],
         ],
       ),
@@ -366,22 +430,35 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('动爻 · $posName',
-              style: TextStyle(
-                  color: c.changing,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            '动爻 · $posName',
+            style: TextStyle(
+              color: c.changing,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           if (ci.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(ci,
-                style: TextStyle(
-                    color: c.textBody, fontSize: 14, height: 1.6)),
+            Text(
+              ci,
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.body,
+                height: AppLineHeight.reading,
+              ),
+            ),
           ],
           if (note.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(note,
-                style: TextStyle(
-                    color: c.textSubtitle, fontSize: 12, height: 1.5)),
+            Text(
+              note,
+              style: TextStyle(
+                color: c.textSubtitle,
+                fontSize: AppFontSize.label,
+                height: AppLineHeight.body,
+              ),
+            ),
           ],
         ],
       ),
@@ -396,8 +473,12 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
     if (_inputs != null) sb.writeln('取数：${_inputs![0]} · ${_inputs![1]}');
     sb.writeln('本卦：${r.benName}（${xiang[r.upName]}${xiang[r.loName]}）');
-    sb.writeln('上卦：${r.upName}${xiang[r.upName]}  下卦：${r.loName}${xiang[r.loName]}');
-    sb.writeln('动爻：第${const ["", "初", "二", "三", "四", "五", "上"][r.dong]}爻  体卦：${r.tiName}  用卦：${r.yongName}');
+    sb.writeln(
+      '上卦：${r.upName}${xiang[r.upName]}  下卦：${r.loName}${xiang[r.loName]}',
+    );
+    sb.writeln(
+      '动爻：第${const ["", "初", "二", "三", "四", "五", "上"][r.dong]}爻  体卦：${r.tiName}  用卦：${r.yongName}',
+    );
     sb.writeln('之卦：${r.bianName}');
     // 卦辞爻辞
     final benCi = HexagramTexts.guaCi(r.benName);
@@ -431,22 +512,32 @@ class _MeihuaPageState extends ConsumerState<MeihuaPage>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label,
-            style: TextStyle(color: c.textSubtitle, fontSize: 11)),
+        Text(
+          label,
+          style: TextStyle(
+            color: c.textSubtitle,
+            fontSize: AppFontSize.caption,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text('$name${xiang[name]}',
-            style: TextStyle(
-                color: c.goldBright,
-                fontSize: 18,
-                fontWeight: FontWeight.bold)),
-        Text(role,
-            style: TextStyle(
-                color: role == '用' ? c.changing : c.wood,
-                fontSize: 11)),
+        Text(
+          '$name${xiang[name]}',
+          style: TextStyle(
+            color: c.goldBright,
+            fontSize: AppFontSize.title,
+            fontWeight: AppFontWeight.bold,
+          ),
+        ),
+        Text(
+          role,
+          style: TextStyle(
+            color: role == '用' ? c.changing : c.wood,
+            fontSize: AppFontSize.caption,
+          ),
+        ),
       ],
     );
   }
 
-  String _posLabel(int i) =>
-      const ['', '初', '二', '三', '四', '五', '上'][i];
+  String _posLabel(int i) => const ['', '初', '二', '三', '四', '五', '上'][i];
 }

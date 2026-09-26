@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/app_config.dart';
 import 'core/config/config_providers.dart';
+import 'core/config/platform_info.dart';
 import 'core/layout/app_breakpoints.dart';
 import 'core/rng/rng_providers.dart';
+import 'shared/widgets/app_desktop_window_bar.dart';
 import 'shared/widgets/app_desktop_navigation.dart';
 import 'router/app_router.dart';
 
@@ -90,15 +92,24 @@ class _JeenithAppState extends ConsumerState<JeenithApp>
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final content = child ?? const SizedBox.shrink();
-                  if (!AppBreakpoints.isDesktopNavigation(
+                  final appContent = !AppBreakpoints.isDesktopNavigation(
                     constraints.maxWidth,
-                  )) {
-                    return content;
-                  }
-                  return Row(
+                  )
+                      ? content
+                      : Row(
                     children: [
-                      AppDesktopNavigation(router: router),
+                      AppDesktopNavigation(
+                        router: router,
+                        showBrand: !PlatformInfo.isWindows,
+                      ),
                       Expanded(child: content),
+                    ],
+                  );
+                  if (!PlatformInfo.isWindows) return appContent;
+                  return Column(
+                    children: [
+                      const AppDesktopWindowBar(),
+                      Expanded(child: appContent),
                     ],
                   );
                 },

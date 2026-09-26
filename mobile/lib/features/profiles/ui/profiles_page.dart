@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/profiles/profile_store.dart';
+import '../../../core/layout/app_breakpoints.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/gold_button.dart';
@@ -74,7 +75,7 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
           _dialogAction('删除', gradeBad, () => Navigator.of(context, rootNavigator: true).pop(true), bold: true),
         ],
         child: Text('确定删除「${p.name}」的档案？此操作不可撤销。',
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6)),
+            style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading)),
       ),
     );
     if (ok == true) {
@@ -94,9 +95,9 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
           child: Text(label,
               style: TextStyle(
                   color: color,
-                  fontSize: 14,
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                  letterSpacing: 2)),
+                  fontSize: AppFontSize.body,
+                  fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular,
+                  letterSpacing: AppLetterSpacing.label)),
         ),
       );
 
@@ -108,10 +109,10 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
         automaticallyImplyLeading: false,
         title: Column(
           children: [
-            const Text('档　案', style: TextStyle(fontSize: 18)),
+            const Text('档　案', style: TextStyle(fontSize: AppFontSize.title)),
             Text('生 辰 档 案',
                 style:
-                    TextStyle(fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+                    TextStyle(fontSize: AppFontSize.micro, color: c.textSubtitle, letterSpacing: AppLetterSpacing.decorative)),
           ],
         ),
         actions: [
@@ -123,13 +124,13 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.person_add, color: c.goldBright, size: 20),
+                  Icon(Icons.person_add, color: c.jade, size: 20),
                   const SizedBox(width: 4),
                   Text('新建',
                       style: TextStyle(
-                          color: c.goldBright,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold)),
+                          color: c.jade,
+                          fontSize: AppFontSize.bodySmall,
+                          fontWeight: AppFontWeight.bold)),
                 ],
               ),
             ),
@@ -140,12 +141,47 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
           ? const Center(child: DivinationLoadingIndicator(size: 48))
           : _list.isEmpty
               ? _emptyState(c)
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
-                  itemCount: _list.length,
-                  itemBuilder: (context, i) {
-                    final begin = (i * 0.08).clamp(0.0, 0.6);
-                    return _entranceItem(begin, _profileCard(c, _list[i]));
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isDesktop = AppBreakpoints.isDesktopNavigation(
+                      constraints.maxWidth,
+                    );
+                    final availableWidth =
+                        (constraints.maxWidth - 32).clamp(0.0, double.infinity);
+                    final contentWidth = isDesktop
+                        ? availableWidth.clamp(0.0, 1100.0).toDouble()
+                        : availableWidth.toDouble();
+                    final cardWidth = isDesktop
+                        ? ((contentWidth - 16) / 2).clamp(0.0, 520.0).toDouble()
+                        : contentWidth;
+                    return SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        8,
+                        16,
+                        isDesktop ? 32 : 110,
+                      ),
+                      child: Center(
+                        child: SizedBox(
+                          width: contentWidth,
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 16,
+                            runSpacing: 16,
+                            children: [
+                              for (var i = 0; i < _list.length; i++)
+                                SizedBox(
+                                  width: cardWidth,
+                                  child: _entranceItem(
+                                    (i * 0.08).clamp(0.0, 0.6),
+                                    _profileCard(c, _list[i]),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
                   },
                 ),
     );
@@ -174,7 +210,7 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
             Icon(Icons.folder_open, color: c.textHint, size: 48),
             const SizedBox(height: 12),
             Text('暂无档案，请新建',
-                style: TextStyle(color: c.textHint, fontSize: 14)),
+                style: TextStyle(color: c.textHint, fontSize: AppFontSize.body)),
             const SizedBox(height: 16),
             GoldButton(text: '新建档案', onPressed: () => _editProfile()),
           ],
@@ -199,7 +235,7 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
                   decoration: BoxDecoration(
                     color: (p.isMale ? c.gold : c.waterDeepGlow)
                         .withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.control),
                     border: Border.all(
                         color: (p.isMale ? c.gold : c.waterDeepGlow)
                             .withValues(alpha: 0.5)),
@@ -216,13 +252,13 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
                       Text(p.name,
                           style: TextStyle(
                               color: c.goldBright,
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold)),
+                              fontSize: AppFontSize.eyebrow,
+                              fontWeight: AppFontWeight.bold)),
                       const SizedBox(height: 2),
                       Text(
                           '${p.birthDisplay}${zhiIdx >= 0 ? "（${_zhiNames[zhiIdx]}时）" : ""}',
                           style:
-                              TextStyle(color: c.textBody, fontSize: 12)),
+                              TextStyle(color: c.textBody, fontSize: AppFontSize.label)),
                     ],
                   ),
                 ),
@@ -232,12 +268,12 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
                         const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                       color: c.fireGlow.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppRadius.compact),
                       border: Border.all(
                           color: c.fireGlow.withValues(alpha: 0.55)),
                     ),
                     child: Text('时辰未知',
-                        style: TextStyle(color: c.fireGlow, fontSize: 10)),
+                        style: TextStyle(color: c.fireGlow, fontSize: AppFontSize.micro)),
                   ),
               ],
             ),
@@ -247,10 +283,10 @@ class _ProfilesPageState extends ConsumerState<ProfilesPage>
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: c.panel,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppRadius.compactRound),
                 ),
                 child: Text(p.note!,
-                    style: TextStyle(color: c.textSubtitle, fontSize: 11),
+                    style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.caption),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis),
               ),
@@ -424,7 +460,7 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
 
   Widget _label(AppClr c, String t) => Padding(
         padding: const EdgeInsets.only(top: 2, bottom: 4),
-        child: Text(t, style: TextStyle(color: c.textSubtitle, fontSize: 11)),
+        child: Text(t, style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.caption)),
       );
 
   /// 主题输入框（金边 + 透明填充 + 聚焦金亮）。
@@ -435,20 +471,20 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
         controller: controller,
         keyboardType:
             text ? TextInputType.text : TextInputType.number,
-        style: TextStyle(color: c.textPrimary, fontSize: 13),
+        style: TextStyle(color: c.textPrimary, fontSize: AppFontSize.bodySmall),
         cursorColor: c.gold,
         decoration: InputDecoration(
           isDense: true,
           hintText: hint,
-          hintStyle: TextStyle(color: c.textHint, fontSize: 12),
+          hintStyle: TextStyle(color: c.textHint, fontSize: AppFontSize.label),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
             borderSide: BorderSide(color: c.goldBorder),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
             borderSide: BorderSide(color: c.goldBright, width: 1.2),
           ),
         ),
@@ -481,7 +517,7 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
                     ? c.fireGlow.withValues(alpha: 0.18)
                     : c.gold.withValues(alpha: 0.18))
                 : c.panel,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
             border: Border.all(
                 color: selected
                     ? (isUnknown ? c.fireGlow : c.gold)
@@ -493,8 +529,8 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
                 color: selected
                     ? (isUnknown ? c.fireGlow : c.goldBright)
                     : c.textBody,
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                fontSize: AppFontSize.label,
+                fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
               )),
         ),
       );
@@ -507,14 +543,14 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
             color: selected ? c.gold.withValues(alpha: 0.18) : c.panel,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.small),
             border: Border.all(color: selected ? c.gold : c.goldBorder),
           ),
           child: Text(label,
               style: TextStyle(
                 color: selected ? c.goldBright : c.textBody,
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
               )),
         ),
       );
@@ -529,9 +565,9 @@ class _ProfileEditDialogState extends ConsumerState<_ProfileEditDialog> {
           child: Text(label,
               style: TextStyle(
                   color: color,
-                  fontSize: 14,
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-                  letterSpacing: 2)),
+                  fontSize: AppFontSize.body,
+                  fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular,
+                  letterSpacing: AppLetterSpacing.label)),
         ),
       );
 }

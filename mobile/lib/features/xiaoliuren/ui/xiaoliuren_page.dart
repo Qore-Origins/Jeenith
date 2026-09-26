@@ -18,6 +18,7 @@ import '../../../shared/widgets/entrance_item.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/svg_icon.dart';
 import '../algorithm/divine.dart';
 import '../state/xiaoliuren_providers.dart';
@@ -44,6 +45,7 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
   DivineResult? _divine;
   EntropySample? _entropy;
   DivinationResult? _result;
+  HistoryEntry? _resultHistoryEntry;
   bool _busy = false;
   bool _sampling = false;
   String? _error;
@@ -78,7 +80,11 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
       _divine = divine(nums);
       _entropy = null;
       _result = buildXiaoliurenResult(
-          nums: nums, divine: _divine!, entropy: null);
+        nums: nums,
+        divine: _divine!,
+        entropy: null,
+      );
+      _resultHistoryEntry = restore;
       _inputCtrl.text = nums.join(' ');
     });
     _resultAnim.forward(from: 0);
@@ -96,9 +102,13 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
   (List<int>, String?) _parseInput() {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return (<int>[], '请输入数字');
-    var tokens = RegExp(r'\d+').allMatches(text).map((m) => m.group(0)!).toList();
+    var tokens = RegExp(
+      r'\d+',
+    ).allMatches(text).map((m) => m.group(0)!).toList();
     if (tokens.length < 3) {
-      final digits = RegExp(r'\d').allMatches(text).map((m) => m.group(0)!).toList();
+      final digits = RegExp(
+        r'\d',
+      ).allMatches(text).map((m) => m.group(0)!).toList();
       if (digits.length >= 3) tokens = digits;
     }
     if (tokens.length < 3) return (<int>[], '请至少输入三个数字');
@@ -138,8 +148,9 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
 
   Future<void> _onRandom() async {
     setState(() => _sampling = true);
-    final entropy =
-        await ref.read(trueRandomProvider).generate(count: 3, vmax: 9);
+    final entropy = await ref
+        .read(trueRandomProvider)
+        .generate(count: 3, vmax: 9);
     if (!mounted) return;
     _divineWith(entropy.numbers, entropy);
   }
@@ -166,6 +177,7 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
       _divine = null;
       _entropy = null;
       _result = null;
+      _resultHistoryEntry = null;
       _busy = false;
       _error = null;
       _inputCtrl.clear();
@@ -177,12 +189,15 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
   void _onWheelDone() {
     if (_nums == null || _divine == null) return;
     setState(() {
-      _result =
-          buildXiaoliurenResult(nums: _nums!, divine: _divine!, entropy: _entropy);
+      _result = buildXiaoliurenResult(
+        nums: _nums!,
+        divine: _divine!,
+        entropy: _entropy,
+      );
       _busy = false;
     });
     _resultAnim.forward(from: 0);
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'xiaoliuren',
       techName: '小六壬',
@@ -190,7 +205,9 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
       summary: _result?.cards.map((c) => c.title).join('·') ?? '',
       detail: _buildCopyText(),
       extra: {'nums': _nums},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   @override
@@ -204,10 +221,15 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
         ),
         title: Column(
           children: [
-            const Text('小　六　壬', style: TextStyle(fontSize: 18)),
-            Text('掐 指 神 课',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('小　六　壬', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '掐 指 神 课',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -231,11 +253,14 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
                       return Container(
                         decoration: BoxDecoration(
                           color: c.bg.withValues(alpha: 0.95),
-                          borderRadius:
-                              const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppRadius.panel),
+                          ),
                           border: Border(
-                              top: BorderSide(
-                                  color: c.gold.withValues(alpha: 0.5))),
+                            top: BorderSide(
+                              color: c.gold.withValues(alpha: 0.5),
+                            ),
+                          ),
                         ),
                         child: CustomScrollView(
                           controller: scrollController,
@@ -243,9 +268,13 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
                             SliverToBoxAdapter(child: _buildDragHandle()),
                             SliverPersistentHeader(
                               pinned: true,
-                              delegate: _PinHeaderDelegate(child: _buildActionBar()),
+                              delegate: _PinHeaderDelegate(
+                                child: _buildActionBar(),
+                              ),
                             ),
                             _buildResultSliver(),
+                            if (_resultHistoryEntry != null)
+                              _buildAiLaunchSliver(),
                           ],
                         ),
                       );
@@ -267,7 +296,7 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
         height: 4,
         decoration: BoxDecoration(
           color: c.gold.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(AppRadius.hairline),
         ),
       ),
     );
@@ -275,121 +304,139 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
 
   /// 交互区（输入/起卦/操作）—— pinned header 内容，移动/桌面共用。
   Widget _buildActionBar() => Container(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-        color: AppClr.of(context).bg.withValues(alpha: 0.92),
-        // minHeight 须 == _PinHeaderDelegate extent(200)，否则 child 高度 < extent
-        // 产生 paintExtent < layoutExtent 异常 geometry，致 viewport paint 空指针。
-        constraints: const BoxConstraints(minHeight: 200),
-        alignment: Alignment.topCenter,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildInputRow(),
-            const SizedBox(height: 8),
-            _buildButtons(),
-          ],
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+    color: AppClr.of(context).bg.withValues(alpha: 0.92),
+    // minHeight 须 == _PinHeaderDelegate extent(200)，否则 child 高度 < extent
+    // 产生 paintExtent < layoutExtent 异常 geometry，致 viewport paint 空指针。
+    constraints: const BoxConstraints(minHeight: 200),
+    alignment: Alignment.topCenter,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [_buildInputRow(), const SizedBox(height: 8), _buildButtons()],
+    ),
+  );
 
   /// 结果列表 sliver —— 移动/桌面共用。
   /// 包裹 RepaintBoundary 以支持截图分享。
   /// RepaintBoundary 仅包裹宫位结果区，绝不包裹底部输入框与按钮（ActionBar）。
   Widget _buildResultSliver() => SliverPadding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 96),
-        sliver: SliverToBoxAdapter(
-          child: RepaintBoundary(
-            key: _boundaryKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: _resultItems(),
-            ),
-          ),
+    padding: const EdgeInsets.fromLTRB(12, 4, 12, 96),
+    sliver: SliverToBoxAdapter(
+      child: RepaintBoundary(
+        key: _boundaryKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _resultItems(),
         ),
-      );
+      ),
+    ),
+  );
+
+  Widget _buildAiLaunchSliver() => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.large,
+      0,
+      AppSpacing.large,
+      AppSpacing.xLarge,
+    ),
+    sliver: SliverToBoxAdapter(
+      child: Center(
+        child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+      ),
+    ),
+  );
 
   /// 桌面端布局：可视化（固定）+ 交互结果（滚轮滚动）。
   /// 桌面端鼠标拖拽不灵，弃用 DraggableScrollableSheet，改上下分栏。
   Widget _buildDesktopBody() {
     final c = AppClr.of(context);
     return Column(
-        children: [
-          SizedBox(
-            height: 320,
-            child: Center(
-              child: DivinationWheel(key: _wheelKey, onDone: _onWheelDone),
-            ),
+      children: [
+        SizedBox(
+          height: 320,
+          child: Center(
+            child: DivinationWheel(key: _wheelKey, onDone: _onWheelDone),
           ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: c.gold.withValues(alpha: 0.5),
+        ),
+        Divider(height: 1, thickness: 1, color: c.gold.withValues(alpha: 0.5)),
+        Expanded(
+          child: CustomScrollView(
+            controller: _sheetCtrl,
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _PinHeaderDelegate(child: _buildActionBar()),
+              ),
+              _buildResultSliver(),
+              if (_resultHistoryEntry != null) _buildAiLaunchSliver(),
+            ],
           ),
-          Expanded(
-            child: CustomScrollView(
-              controller: _sheetCtrl,
-              slivers: [
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _PinHeaderDelegate(child: _buildActionBar()),
-                ),
-                _buildResultSliver(),
-              ],
-            ),
-          ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildInputRow() => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _inputCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: '输入三位数字，如 2 8 9',
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  errorText: _error,
-                ),
-                onSubmitted: (_) => _onDivine(),
+    padding: const EdgeInsets.symmetric(horizontal: 0),
+    child: Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _inputCtrl,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: '输入三位数字，如 2 8 9',
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
               ),
+              errorText: _error,
             ),
-            const SizedBox(width: 8),
-            // GoldButton 必须用 SizedBox 给定宽度：GoldButton 内部 AnimatedBuilder
-            // → Transform.scale 链路会阻断 intrinsic size 传递，在 Row 中无 Expanded
-            // 时 Row 测不到按钮宽度，会渲染成"一小条竖线"。zhouyi 用 Expanded 包裹
-            // 不受影响，xiaoliuren 此处按钮在 TextField 之后无法用 Expanded（会撑满），
-            // 故用固定宽度 88px（"起卦"2 字 + padding 44 ≈ 74，给 14px 余量）。
-            SizedBox(
-              width: 88,
-              child: GoldButton(
-                text: '起卦',
-                onPressed: _busy ? null : _onDivine,
-              ),
-            ),
-          ],
+            onSubmitted: (_) => _onDivine(),
+          ),
         ),
-      );
+        const SizedBox(width: 8),
+        // GoldButton 必须用 SizedBox 给定宽度：GoldButton 内部 AnimatedBuilder
+        // → Transform.scale 链路会阻断 intrinsic size 传递，在 Row 中无 Expanded
+        // 时 Row 测不到按钮宽度，会渲染成"一小条竖线"。zhouyi 用 Expanded 包裹
+        // 不受影响，xiaoliuren 此处按钮在 TextField 之后无法用 Expanded（会撑满），
+        // 故用固定宽度 88px（"起卦"2 字 + padding 44 ≈ 74，给 14px 余量）。
+        SizedBox(
+          width: 88,
+          child: GoldButton(text: '起卦', onPressed: _busy ? null : _onDivine),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildButtons() => Wrap(
-        spacing: 8,
-        runSpacing: 6,
-        children: [
-          DarkButton(icon: const SvgIcon('casino'), text: _sampling ? '采样中…' : '随机', onPressed: (_busy || _sampling) ? null : _onRandom),
-          DarkButton(icon: const SvgIcon('schedule'), text: '时辰', onPressed: _busy ? null : _onTime),
-          DarkButton(icon: const SvgIcon('refresh'), text: '重置', onPressed: _onReset),
-          CopyResultButton(text: _buildCopyText(), enabled: _result != null),
-          ShareResultButton(
-            boundaryKey: _boundaryKey,
-            enabled: _result != null,
-            fallbackText: _buildCopyText(),
-          ),
-        ],
-      );
+    spacing: 8,
+    runSpacing: 6,
+    children: [
+      DarkButton(
+        icon: const SvgIcon('casino'),
+        text: _sampling ? '采样中…' : '随机',
+        onPressed: (_busy || _sampling) ? null : _onRandom,
+      ),
+      DarkButton(
+        icon: const SvgIcon('schedule'),
+        text: '时辰',
+        onPressed: _busy ? null : _onTime,
+      ),
+      DarkButton(
+        icon: const SvgIcon('refresh'),
+        text: '重置',
+        onPressed: _onReset,
+      ),
+      CopyResultButton(text: _buildCopyText(), enabled: _result != null),
+      ShareResultButton(
+        boundaryKey: _boundaryKey,
+        enabled: _result != null,
+        fallbackText: _buildCopyText(),
+      ),
+    ],
+  );
 
   /// 生成详细结果文本（供复制）。
   String _buildCopyText() {
@@ -407,7 +454,9 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
     }
     sb.writeln('\n—— 宫位详解 ——');
     for (final c in r.cards) {
-      sb.writeln('第${c.order}宫 ${c.title}（${c.subtitle ?? ""}）${c.badge != null ? "· ${c.badge}" : ""}');
+      sb.writeln(
+        '第${c.order}宫 ${c.title}（${c.subtitle ?? ""}）${c.badge != null ? "· ${c.badge}" : ""}',
+      );
       if (c.poem != null) sb.writeln('  诗诀：${c.poem}');
       if (c.meaning != null) sb.writeln('  含义：${c.meaning}');
       if (c.details != null) {
@@ -431,8 +480,7 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
       return [
         const SizedBox(height: 40),
         Center(
-          child: Text('输入数字、随机取数或以时辰起卦',
-              style: TextStyle(color: c.textHint)),
+          child: Text('输入数字、随机取数或以时辰起卦', style: TextStyle(color: c.textHint)),
         ),
       ];
     }
@@ -445,9 +493,10 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
           child: Text(
             '取数 ${r.inputNumbers?.join(" ")}　→　${r.cards.map((c) => c.title).join(" · ")}',
             style: TextStyle(
-                color: c.goldBright,
-                fontSize: 14,
-                fontWeight: FontWeight.bold),
+              color: c.goldBright,
+              fontSize: AppFontSize.body,
+              fontWeight: AppFontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -480,16 +529,24 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('◆ ${r.verdict!.grade}',
-                    style: TextStyle(
-                        color: r.verdict!.tone,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2)),
+                Text(
+                  '◆ ${r.verdict!.grade}',
+                  style: TextStyle(
+                    color: r.verdict!.tone,
+                    fontSize: AppFontSize.bodyLarge,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.label,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(r.verdict!.description,
-                    style: TextStyle(
-                        color: c.textBody, fontSize: 12, height: 1.5)),
+                Text(
+                  r.verdict!.description,
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
+                  ),
+                ),
               ],
             ),
           ),
@@ -504,12 +561,15 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('◆ 本次真随机采样',
-              style: TextStyle(
-                  color: c.waterDeepGlow,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2)),
+          Text(
+            '◆ 本次真随机采样',
+            style: TextStyle(
+              color: c.waterDeepGlow,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
+            ),
+          ),
           const SizedBox(height: 6),
           for (final s in e.sources)
             Padding(
@@ -517,15 +577,21 @@ class _XiaoliurenPageState extends ConsumerState<XiaoliurenPage>
               child: Row(
                 children: [
                   Expanded(
-                      child: Text(s.name,
-                          style:
-                              TextStyle(color: c.textBody, fontSize: 11))),
-                  Text(s.display,
+                    child: Text(
+                      s.name,
                       style: TextStyle(
-                          color: s.succeeded
-                              ? c.woodGlow
-                              : c.textSubtitle,
-                          fontSize: 11)),
+                        color: c.textBody,
+                        fontSize: AppFontSize.caption,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    s.display,
+                    style: TextStyle(
+                      color: s.succeeded ? c.woodGlow : c.textSubtitle,
+                      fontSize: AppFontSize.caption,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -545,7 +611,8 @@ class _PinHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get maxExtent => 200;
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlaps) => child;
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      child;
   @override
   // child 依赖可变状态（结果 _result / _busy / _sampling），必须返回 true：
   // page setState 后需 rebuild header，复制/分享按钮的 enabled 等参数才能随

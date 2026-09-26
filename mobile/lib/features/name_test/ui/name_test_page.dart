@@ -15,6 +15,7 @@ import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/dark_button.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/wuge.dart';
 
@@ -28,6 +29,7 @@ class NameTestPage extends ConsumerStatefulWidget {
 class _NameTestPageState extends ConsumerState<NameTestPage> {
   final _ctrl = TextEditingController();
   WugeResult? _last;
+  HistoryEntry? _resultHistoryEntry;
   String? _error;
   final GlobalKey _boundaryKey = GlobalKey();
   static final _hanRegex = RegExp(r'^[\u4e00-\u9fa5]{2,4}$');
@@ -48,6 +50,7 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
     setState(() {
       _ctrl.text = name;
       _last = divineName(name);
+      _resultHistoryEntry = restore;
       _error = null;
     });
   }
@@ -74,20 +77,24 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
       _last = result;
       _error = null;
     });
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'name_test',
       techName: '测名字',
       time: DateTime.now(),
-      summary: '「$raw」人格${result.ren.strokes}画·${result.ren.wuxing.label}·${result.ren.fortune.grade}',
+      summary:
+          '「$raw」人格${result.ren.strokes}画·${result.ren.wuxing.label}·${result.ren.fortune.grade}',
       detail: _buildCopyText(result),
       extra: {'name': raw},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _onReset() {
     setState(() {
       _last = null;
+      _resultHistoryEntry = null;
       _error = null;
       _ctrl.clear();
     });
@@ -104,12 +111,15 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
         ),
         title: Column(
           children: [
-            const Text('测　名　字', style: TextStyle(fontSize: 18)),
-            Text('五 格 剖 象',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('测　名　字', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '五 格 剖 象',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -125,12 +135,15 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
                   children: [
                     Icon(Icons.badge, color: c.goldBright, size: 16),
                     const SizedBox(width: 6),
-                    Text('请输入中文姓名（2-4 字）',
-                        style: TextStyle(
-                            color: c.goldBright,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2)),
+                    Text(
+                      '请输入中文姓名（2-4 字）',
+                      style: TextStyle(
+                        color: c.goldBright,
+                        fontSize: AppFontSize.bodySmall,
+                        fontWeight: AppFontWeight.bold,
+                        letterSpacing: AppLetterSpacing.label,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -140,9 +153,9 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: c.textPrimary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 6,
+                    fontSize: AppFontSize.heading,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.display,
                   ),
                   decoration: const InputDecoration(
                     hintText: '姓名',
@@ -155,7 +168,10 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
                       _error!,
-                      style: TextStyle(color: c.gradeBad, fontSize: 12),
+                      style: TextStyle(
+                        color: c.gradeBad,
+                        fontSize: AppFontSize.label,
+                      ),
                     ),
                   ),
               ],
@@ -186,9 +202,10 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
           ),
           const SizedBox(height: 16),
           if (_last != null)
-            RepaintBoundary(
-              key: _boundaryKey,
-              child: _buildResult(_last!),
+            RepaintBoundary(key: _boundaryKey, child: _buildResult(_last!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
             ),
           const SizedBox(height: 12),
           DecorativePanel(
@@ -196,22 +213,49 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('◆ 测名要诀',
-                    style: TextStyle(
-                        color: c.goldBright,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2)),
+                Text(
+                  '◆ 测名要诀',
+                  style: TextStyle(
+                    color: c.goldBright,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.label,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('1. 凝神静气，默念姓名主人之事。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
-                Text('2. 输入完整姓名（2 字为单姓单名，3 字为单姓双名，4 字按复姓双名计）。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
-                Text('3. 依康熙字典笔画计算五格，定五行吉凶。',
-                    style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
+                Text(
+                  '1. 凝神静气，默念姓名主人之事。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
+                Text(
+                  '2. 输入完整姓名（2 字为单姓单名，3 字为单姓双名，4 字按复姓双名计）。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
+                Text(
+                  '3. 依康熙字典笔画计算五格，定五行吉凶。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.reading,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('注：笔画按康熙字典体计；未收录字按 unicode 估算，结果仅供参断。',
-                    style: TextStyle(color: c.textHint, fontSize: 10, height: 1.5)),
+                Text(
+                  '注：笔画按康熙字典体计；未收录字按 unicode 估算，结果仅供参断。',
+                  style: TextStyle(
+                    color: c.textHint,
+                    fontSize: AppFontSize.micro,
+                    height: AppLineHeight.body,
+                  ),
+                ),
               ],
             ),
           ),
@@ -222,7 +266,8 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
 
   Widget _buildResult(WugeResult r) {
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('name_test', AnimationKind.reveal) ??
@@ -234,20 +279,19 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
         replayKey: r,
         hero: Center(
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             decoration: BoxDecoration(
               color: c.bgMid.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.control),
               border: Border.all(color: c.goldBorder, width: 1.5),
             ),
             child: Text(
               r.fullName.split('').join(' '),
               style: TextStyle(
                 color: c.textHighlight,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 4,
+                fontSize: AppFontSize.displaySmall,
+                fontWeight: AppFontWeight.bold,
+                letterSpacing: AppLetterSpacing.decorative,
               ),
             ),
           ),
@@ -255,26 +299,28 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
         sections: [
           if (r.hasMissing)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: c.gradeBad.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: c.gradeBad.withValues(alpha: 0.4)),
+                borderRadius: BorderRadius.circular(AppRadius.small),
+                border: Border.all(color: c.gradeBad.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded,
-                      color: c.gradeBad, size: 16),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: c.gradeBad,
+                    size: 16,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       '部分汉字笔画数据缺失（${_missingChars(r)}），已按估算推算，结果可能不准。',
                       style: TextStyle(
-                          color: c.gradeBad,
-                          fontSize: 11,
-                          height: 1.4),
+                        color: c.gradeBad,
+                        fontSize: AppFontSize.caption,
+                        height: AppLineHeight.compactBody,
+                      ),
                     ),
                   ),
                 ],
@@ -299,28 +345,29 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
           // Verdict
           _sectionLabel('综合批断'),
           Container(
-            padding: const EdgeInsets.symmetric(
-                vertical: 12, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
             decoration: BoxDecoration(
               color: c.bgMid.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               border: Border.all(color: c.goldBorder),
             ),
             child: Text(
               r.summary,
               style: TextStyle(
                 color: c.textPrimary,
-                fontSize: 13,
-                height: 1.8,
-                letterSpacing: 0.5,
+                fontSize: AppFontSize.bodySmall,
+                height: AppLineHeight.ritual,
+                letterSpacing: AppLetterSpacing.tight,
               ),
             ),
           ),
           Center(
             child: Text(
               '${r.time.toString().substring(0, 19)} 测得',
-              style:
-                  TextStyle(color: c.textHint, fontSize: 11),
+              style: TextStyle(
+                color: c.textHint,
+                fontSize: AppFontSize.caption,
+              ),
             ),
           ),
         ],
@@ -343,23 +390,29 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(ch,
-              style: TextStyle(
-                  color: c.textHighlight,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            ch,
+            style: TextStyle(
+              color: c.textHighlight,
+              fontSize: AppFontSize.bodyLarge,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           const SizedBox(width: 6),
-          Text('$strokes 画',
-              style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            '$strokes 画',
+            style: TextStyle(
+              color: color,
+              fontSize: AppFontSize.label,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -370,7 +423,7 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
     return Container(
       decoration: BoxDecoration(
         color: c.bgMid.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
         border: Border.all(color: c.goldBorder),
       ),
       child: Column(
@@ -393,20 +446,56 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
       decoration: BoxDecoration(
         color: c.bgInner,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(7),
-          topRight: Radius.circular(7),
+          topLeft: Radius.circular(AppRadius.compactLoose),
+          topRight: Radius.circular(AppRadius.compactLoose),
         ),
       ),
       child: Row(
         children: [
-          Expanded(flex: 2, child: Text('格',
-              style: TextStyle(color: c.goldBright, fontSize: 11, fontWeight: FontWeight.bold))),
-          Expanded(flex: 2, child: Text('笔画',
-              style: TextStyle(color: c.goldBright, fontSize: 11, fontWeight: FontWeight.bold))),
-          Expanded(flex: 1, child: Text('五行',
-              style: TextStyle(color: c.goldBright, fontSize: 11, fontWeight: FontWeight.bold))),
-          Expanded(flex: 3, child: Text('吉凶',
-              style: TextStyle(color: c.goldBright, fontSize: 11, fontWeight: FontWeight.bold))),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '格',
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.caption,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '笔画',
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.caption,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              '五行',
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.caption,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              '吉凶',
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.caption,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -421,7 +510,7 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
       decoration: BoxDecoration(
         color: highlight
             ? c.gold.withValues(alpha: 0.08)
-            : Colors.transparent,
+            : AppColors.transparent,
         border: Border(
           bottom: isLast
               ? BorderSide.none
@@ -432,29 +521,47 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(g.name,
-                style: TextStyle(
-                    color: highlight ? c.goldBright : c.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              g.name,
+              style: TextStyle(
+                color: highlight ? c.goldBright : c.textPrimary,
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
           ),
           Expanded(
             flex: 2,
-            child: Text('${g.strokes}',
-                style: TextStyle(
-                    color: c.textHighlight,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              '${g.strokes}',
+              style: TextStyle(
+                color: c.textHighlight,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
           ),
           Expanded(
             flex: 1,
-            child: Text(g.wuxing.label,
-                style: TextStyle(color: wxColor, fontSize: 13, fontWeight: FontWeight.bold)),
+            child: Text(
+              g.wuxing.label,
+              style: TextStyle(
+                color: wxColor,
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
           ),
           Expanded(
             flex: 3,
-            child: Text('${g.fortune.grade} · ${g.fortune.desc}',
-                style: TextStyle(color: gradeColor, fontSize: 11, height: 1.3)),
+            child: Text(
+              '${g.fortune.grade} · ${g.fortune.desc}',
+              style: TextStyle(
+                color: gradeColor,
+                fontSize: AppFontSize.caption,
+                height: AppLineHeight.navigation,
+              ),
+            ),
           ),
         ],
       ),
@@ -463,12 +570,16 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
 
   Widget _buildWuxingDistribution(WugeResult r) {
     final count = r.wuxingCount;
-    const order = [Wuxing.metal, Wuxing.wood, Wuxing.water, Wuxing.fire, Wuxing.earth];
+    const order = [
+      Wuxing.metal,
+      Wuxing.wood,
+      Wuxing.water,
+      Wuxing.fire,
+      Wuxing.earth,
+    ];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        for (final w in order) _wuxingChip(w, count[w] ?? 0),
-      ],
+      children: [for (final w in order) _wuxingChip(w, count[w] ?? 0)],
     );
   }
 
@@ -477,11 +588,14 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
     final color = _colorForWuxing(w, c);
     return Column(
       children: [
-        Text(w.label,
-            style: TextStyle(
-                color: color,
-                fontSize: 14,
-                fontWeight: FontWeight.bold)),
+        Text(
+          w.label,
+          style: TextStyle(
+            color: color,
+            fontSize: AppFontSize.body,
+            fontWeight: AppFontWeight.bold,
+          ),
+        ),
         const SizedBox(height: 4),
         Container(
           width: 28,
@@ -492,15 +606,20 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
             shape: BoxShape.circle,
             border: Border.all(color: color.withValues(alpha: 0.6)),
           ),
-          child: Text('$count',
-              style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
+          child: Text(
+            '$count',
+            style: TextStyle(
+              color: color,
+              fontSize: AppFontSize.body,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
         ),
         const SizedBox(height: 2),
-        Text(w.nature,
-            style: TextStyle(color: c.textMeta, fontSize: 9)),
+        Text(
+          w.nature,
+          style: TextStyle(color: c.textMeta, fontSize: AppFontSize.footnote),
+        ),
       ],
     );
   }
@@ -517,9 +636,9 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
             text,
             style: TextStyle(
               color: c.goldBright,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
             ),
           ),
         ],
@@ -533,18 +652,28 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
     final sb = StringBuffer('【测名字 · 五格剖象】\n');
     sb.writeln('时间：${r.time.toString().substring(0, 19)}');
     sb.writeln('姓名：「${r.fullName}」');
-    sb.writeln('康熙笔画：${r.chars.asMap().entries.map((e) => '${e.value}=${r.strokes[e.key]}画').join(' ')}');
+    sb.writeln(
+      '康熙笔画：${r.chars.asMap().entries.map((e) => '${e.value}=${r.strokes[e.key]}画').join(' ')}',
+    );
     sb.writeln('姓氏：${r.compoundSurname ? "复姓" : "单姓"}');
     if (r.hasMissing) {
       sb.writeln('（注：${_missingChars(r)} 笔画数据缺失，已估算）');
     }
     sb.writeln('\n—— 五格数理 ——');
     for (final g in [r.tian, r.ren, r.di, r.zong, r.wai]) {
-      sb.writeln('${g.name}（${g.role}）：${g.strokes}画 · ${g.wuxing.label} · ${g.fortune.grade} · ${g.fortune.desc}');
+      sb.writeln(
+        '${g.name}（${g.role}）：${g.strokes}画 · ${g.wuxing.label} · ${g.fortune.grade} · ${g.fortune.desc}',
+      );
     }
     sb.writeln('\n—— 五行分布 ——');
     final count = r.wuxingCount;
-    for (final w in [Wuxing.metal, Wuxing.wood, Wuxing.water, Wuxing.fire, Wuxing.earth]) {
+    for (final w in [
+      Wuxing.metal,
+      Wuxing.wood,
+      Wuxing.water,
+      Wuxing.fire,
+      Wuxing.earth,
+    ]) {
       sb.writeln('${w.label}（${w.nature}）：${count[w] ?? 0}');
     }
     sb.writeln('\n—— 综合批断 ——');
@@ -554,19 +683,19 @@ class _NameTestPageState extends ConsumerState<NameTestPage> {
   }
 
   Color _colorForWuxing(Wuxing w, AppClr c) => switch (w) {
-        Wuxing.metal => c.metal,
-        Wuxing.wood => c.wood,
-        Wuxing.water => c.waterDeep,
-        Wuxing.fire => c.fire,
-        Wuxing.earth => c.earth,
-      };
+    Wuxing.metal => c.metal,
+    Wuxing.wood => c.wood,
+    Wuxing.water => c.waterDeep,
+    Wuxing.fire => c.fire,
+    Wuxing.earth => c.earth,
+  };
 
   Color _colorForGrade(String grade, AppClr c) => switch (grade) {
-        '大吉' => c.gradeGreat,
-        '吉' => c.gradeGood,
-        '平' => c.gradeSteady,
-        '凶' => c.gradeRough,
-        '大凶' => c.gradeBad,
-        _ => c.textBody,
-      };
+    '大吉' => c.gradeGreat,
+    '吉' => c.gradeGood,
+    '平' => c.gradeSteady,
+    '凶' => c.gradeRough,
+    '大凶' => c.gradeBad,
+    _ => c.textBody,
+  };
 }

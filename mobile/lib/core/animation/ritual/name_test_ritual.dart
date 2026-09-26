@@ -2,8 +2,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -164,7 +164,7 @@ class _RitualPainter extends CustomPainter {
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: cp),
           fontSize: charSize * e,
-          fontWeight: FontWeight.bold,
+          fontWeight: AppFontWeight.bold,
         ),
       );
     }
@@ -229,7 +229,7 @@ class _RitualPainter extends CustomPainter {
           color: (isRen ? AppColors.goldBright : color)
               .withValues(alpha: gp),
           fontSize: r * 0.85,
-          fontWeight: FontWeight.bold,
+          fontWeight: AppFontWeight.bold,
         ),
       );
 
@@ -243,7 +243,7 @@ class _RitualPainter extends CustomPainter {
             color: (isRen ? AppColors.gold : AppColors.textMeta)
                 .withValues(alpha: (gp - 0.5) * 2 * 0.85),
             fontSize: base * 0.022,
-            letterSpacing: 2,
+            letterSpacing: AppLetterSpacing.label,
           ),
         );
       }
@@ -271,9 +271,9 @@ class _RitualPainter extends CustomPainter {
         Offset(cx, cy + base * 0.30),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleA),
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontSize: AppFontSize.metric,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
       final subA = _iv(0.92, 1.0);
@@ -284,8 +284,8 @@ class _RitualPainter extends CustomPainter {
           Offset(cx, cy + base * 0.37),
           TextStyle(
             color: AppColors.textSubtitle.withValues(alpha: subA * 0.8),
-            fontSize: 11,
-            letterSpacing: 6,
+            fontSize: AppFontSize.caption,
+            letterSpacing: AppLetterSpacing.display,
           ),
         );
       }

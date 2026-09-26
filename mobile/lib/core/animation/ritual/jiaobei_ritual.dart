@@ -156,8 +156,8 @@ class _RitualPainter extends CustomPainter {
       TextStyle(
         color: AppColors.gold.withValues(alpha: progress * 0.06),
         fontSize: size.shortestSide * 0.28,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 16,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.ritualDisplayWide,
       ),
     );
   }
@@ -317,9 +317,9 @@ class _RitualPainter extends CustomPainter {
       Offset(cx, y),
       TextStyle(
         color: _resultGlowColor().withValues(alpha: e),
-        fontSize: 26,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 8,
+        fontSize: AppFontSize.headingSmall,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.ritual,
       ),
     );
   }

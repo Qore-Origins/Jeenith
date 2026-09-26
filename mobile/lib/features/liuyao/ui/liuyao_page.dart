@@ -15,6 +15,7 @@ import '../../../data/yijing/trigrams.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../../../shared/widgets/tech_guide_overlay.dart';
 import '../algorithm/divine.dart';
@@ -38,6 +39,7 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
   bool _isMale = true;
   int _topicIdx = 0; // 默认「求财谋利」
   LiuyaoResult? _r;
+  HistoryEntry? _resultHistoryEntry;
   final GlobalKey _boundaryKey = GlobalKey();
 
   @override
@@ -50,17 +52,13 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
   }
 
   /// 首次进入显示使用指引（只弹一次）。
-  Future<void> _showGuide() => showTechGuideOnce(
-        context,
-        'liuyao',
-        '六爻纳甲 · 使用指引',
-        const [
-          GuideStep('起卦', '先选「所测之事」（定用神）与性别，再摇六爻；金钱卦同周易，但断法以纳甲为主。'),
-          GuideStep('纳甲排盘', '六爻配六亲（父母/兄弟/子孙/妻财/官鬼）+ 六神 + 世应，用神为所测之事对应的六亲。'),
-          GuideStep('断辞要点', '用神旺衰看月日生克，发动之爻主事之动向；空亡/六冲六合/三合三刑为格局参考。'),
-          GuideStep('旺衰吉凶', '用神得月日生扶为旺（吉），受克为衰（凶），空亡待出空方有作为。'),
-        ],
-      );
+  Future<void> _showGuide() =>
+      showTechGuideOnce(context, 'liuyao', '六爻纳甲 · 使用指引', const [
+        GuideStep('起卦', '先选「所测之事」（定用神）与性别，再摇六爻；金钱卦同周易，但断法以纳甲为主。'),
+        GuideStep('纳甲排盘', '六爻配六亲（父母/兄弟/子孙/妻财/官鬼）+ 六神 + 世应，用神为所测之事对应的六亲。'),
+        GuideStep('断辞要点', '用神旺衰看月日生克，发动之爻主事之动向；空亡/六冲六合/三合三刑为格局参考。'),
+        GuideStep('旺衰吉凶', '用神得月日生扶为旺（吉），受克为衰（凶），空亡待出空方有作为。'),
+      ]);
 
   /// v2.8.0：从历史记录恢复，按 extra 中的原始六爻快照精确复现。
   void _maybeRestore() {
@@ -82,6 +80,7 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       if (ti != null && ti >= 0 && ti < topics.length) _topicIdx = ti;
       _isMale = male;
       _r = divine(yongShen: yongShen, rawLines: raw);
+      _resultHistoryEntry = restore;
     });
   }
 
@@ -91,7 +90,7 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
     final raw = rollLines();
     setState(() => _r = divine(yongShen: yongShen, rawLines: raw));
     FocusScope.of(context).unfocus();
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'liuyao',
       techName: '六爻',
@@ -102,9 +101,13 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
         'topicIdx': _topicIdx,
         'isMale': _isMale,
         'yongShen': yongShen,
-        'raw': raw.map((l) => {'yang': l.yang, 'changing': l.changing}).toList(),
+        'raw': raw
+            .map((l) => {'yang': l.yang, 'changing': l.changing})
+            .toList(),
       },
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   @override
@@ -118,10 +121,15 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
         ),
         title: Column(
           children: [
-            const Text('六　爻', style: TextStyle(fontSize: 18)),
-            Text('纳 甲 断 卦',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('六　爻', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '纳 甲 断 卦',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -132,6 +140,10 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
           const SizedBox(height: 14),
           if (_r != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_r!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 10),
         ],
       ),
@@ -146,7 +158,13 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
         children: [
           Row(
             children: [
-              Text('性别', style: TextStyle(color: c.textBody, fontSize: 12)),
+              Text(
+                '性别',
+                style: TextStyle(
+                  color: c.textBody,
+                  fontSize: AppFontSize.label,
+                ),
+              ),
               const SizedBox(width: 10),
               _genderChip('男', true),
               const SizedBox(width: 6),
@@ -154,7 +172,10 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
             ],
           ),
           const SizedBox(height: 10),
-          Text('所测之事', style: TextStyle(color: c.textBody, fontSize: 12)),
+          Text(
+            '所测之事',
+            style: TextStyle(color: c.textBody, fontSize: AppFontSize.label),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -164,8 +185,10 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
             ],
           ),
           const SizedBox(height: 6),
-          Text('用神：${topics[_topicIdx].yongShen(_isMale)}',
-              style: TextStyle(color: c.goldBright, fontSize: 12)),
+          Text(
+            '用神：${topics[_topicIdx].yongShen(_isMale)}',
+            style: TextStyle(color: c.goldBright, fontSize: AppFontSize.label),
+          ),
           const SizedBox(height: 12),
           GoldButton(text: '摇卦起占', onPressed: _onDivine),
           const SizedBox(height: 8),
@@ -173,7 +196,9 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
             children: [
               Expanded(
                 child: CopyResultButton(
-                    text: _buildCopyText(), enabled: _r != null),
+                  text: _buildCopyText(),
+                  enabled: _r != null,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -198,16 +223,20 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? c.gold.withValues(alpha: 0.18) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: selected
+              ? c.gold.withValues(alpha: 0.18)
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.compactRound),
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
-        child: Text(label,
-            style: TextStyle(
-              color: selected ? c.goldBright : c.textBody,
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? c.goldBright : c.textBody,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
+          ),
+        ),
       ),
     );
   }
@@ -219,16 +248,20 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? c.gold.withValues(alpha: 0.18) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: selected
+              ? c.gold.withValues(alpha: 0.18)
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.compactRound),
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
-        child: Text(topics[i].label,
-            style: TextStyle(
-              color: selected ? c.goldBright : c.textBody,
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            )),
+        child: Text(
+          topics[i].label,
+          style: TextStyle(
+            color: selected ? c.goldBright : c.textBody,
+            fontSize: AppFontSize.label,
+            fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
+          ),
+        ),
       ),
     );
   }
@@ -241,21 +274,25 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppRadius.compactRound),
         border: Border.all(color: color.withValues(alpha: 0.6)),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: AppFontSize.label,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.label,
+        ),
+      ),
     );
   }
 
   Widget _buildResult(LiuyaoResult r) {
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('liuyao', AnimationKind.reveal) ??
@@ -267,66 +304,93 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
         padding: const EdgeInsets.all(12),
         child: Column(
           children: [
-            Text(r.benName,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 56,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              r.benName,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.heroLarge,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 6),
             Text(
-                '${xiang[r.upperName]}${xiang[r.lowerName]}${r.benName}'
-                ' · ${r.bagong.gong}宫${r.bagong.seqName}（${r.gongWuxing}）',
-                style: TextStyle(color: c.gold, fontSize: 13, letterSpacing: 2)),
+              '${xiang[r.upperName]}${xiang[r.lowerName]}${r.benName}'
+              ' · ${r.bagong.gong}宫${r.bagong.seqName}（${r.gongWuxing}）',
+              style: TextStyle(
+                color: c.gold,
+                fontSize: AppFontSize.bodySmall,
+                letterSpacing: AppLetterSpacing.label,
+              ),
+            ),
             if (r.isLiuChong || r.isLiuHe) ...[
               const SizedBox(height: 4),
               _gejuChip(r, c),
             ],
             const SizedBox(height: 6),
             Text(
-                '日辰 ${r.dayGan}${r.dayZhi} · 月建${r.monthZhi} · 日空${r.dayKong.join("")}'
-                ' · 用神「${r.yongShen}」${r.yongKong ? "（空）" : ""}',
-                style: TextStyle(color: c.textBody, fontSize: 11)),
+              '日辰 ${r.dayGan}${r.dayZhi} · 月建${r.monthZhi} · 日空${r.dayKong.join("")}'
+              ' · 用神「${r.yongShen}」${r.yongKong ? "（空）" : ""}',
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.caption,
+              ),
+            ),
           ],
         ),
       ),
       sections: [
-        Text('◆ 六爻纳甲盘',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 六爻纳甲盘',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildYaoTable(r, r.lines, bianMode: false),
-        Text('◆ 用神断辞',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 用神断辞',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildJudgeCard(r, c),
         if (r.bianLines != null) ...[
-          Text('◆ 之卦 · ${r.bianName}',
-              style: TextStyle(
-                  color: c.changing,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2)),
+          Text(
+            '◆ 之卦 · ${r.bianName}',
+            style: TextStyle(
+              color: c.changing,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
+            ),
+          ),
           _buildYaoTable(r, r.bianLines!, bianMode: true),
         ],
-        Text('◆ 六亲 · 六神 释义',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 六亲 · 六神 释义',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildLegend(c),
       ],
     );
   }
 
   /// 六爻表（自上爻至初爻倒序）。
-  Widget _buildYaoTable(LiuyaoResult r, List<Yao> lines,
-      {required bool bianMode}) {
+  Widget _buildYaoTable(
+    LiuyaoResult r,
+    List<Yao> lines, {
+    required bool bianMode,
+  }) {
     return DecorativePanel(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
       child: Column(
@@ -360,11 +424,14 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
         children: [
           SizedBox(
             width: 34,
-            child: Text(yaoTitle(i, y.yang),
-                style: TextStyle(
-                    color: c.textMeta,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold)),
+            child: Text(
+              yaoTitle(i, y.yang),
+              style: TextStyle(
+                color: c.textMeta,
+                fontSize: AppFontSize.label,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
           ),
           const SizedBox(width: 8),
           _yaoSymbol(y.yang, c),
@@ -372,26 +439,45 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
           Expanded(
             child: Row(
               children: [
-                Text(y.liuqin,
-                    style: TextStyle(
-                      color: isYong ? c.goldBright : c.textPrimary,
-                      fontSize: 13,
-                      fontWeight:
-                          isYong ? FontWeight.bold : FontWeight.normal,
-                    )),
+                Text(
+                  y.liuqin,
+                  style: TextStyle(
+                    color: isYong ? c.goldBright : c.textPrimary,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: isYong
+                        ? AppFontWeight.bold
+                        : AppFontWeight.regular,
+                  ),
+                ),
                 const SizedBox(width: 6),
-                Text('${y.gan}${y.zhi}',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '${y.gan}${y.zhi}',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(width: 4),
-                Text(zhiWuxing[y.zhi]!,
-                    style: TextStyle(color: c.textSubtitle, fontSize: 10)),
+                Text(
+                  zhiWuxing[y.zhi]!,
+                  style: TextStyle(
+                    color: c.textSubtitle,
+                    fontSize: AppFontSize.micro,
+                  ),
+                ),
               ],
             ),
           ),
           SizedBox(
-              width: 30,
-              child: Text(y.shenshou,
-                  style: TextStyle(color: c.textMeta, fontSize: 11))),
+            width: 30,
+            child: Text(
+              y.shenshou,
+              style: TextStyle(
+                color: c.textMeta,
+                fontSize: AppFontSize.caption,
+              ),
+            ),
+          ),
           const SizedBox(width: 4),
           Row(mainAxisSize: MainAxisSize.min, children: tags),
         ],
@@ -415,17 +501,22 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
   }
 
   Widget _tag(String t, Color color) => Container(
-        margin: const EdgeInsets.only(left: 3),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: color.withValues(alpha: 0.6)),
-        ),
-        child: Text(t,
-            style: TextStyle(
-                color: color, fontSize: 10, fontWeight: FontWeight.bold)),
-      );
+    margin: const EdgeInsets.only(left: 3),
+    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(AppRadius.tiny),
+      border: Border.all(color: color.withValues(alpha: 0.6)),
+    ),
+    child: Text(
+      t,
+      style: TextStyle(
+        color: color,
+        fontSize: AppFontSize.micro,
+        fontWeight: AppFontWeight.bold,
+      ),
+    ),
+  );
 
   Widget _buildJudgeCard(LiuyaoResult r, AppClr c) {
     return DecorativePanel(
@@ -438,15 +529,18 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: c.fire.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               border: Border.all(color: c.fireGlow.withValues(alpha: 0.6)),
             ),
-            child: Text(r.judgment,
-                style: TextStyle(
-                    color: c.fireGlow,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    height: 1.5)),
+            child: Text(
+              r.judgment,
+              style: TextStyle(
+                color: c.fireGlow,
+                fontSize: AppFontSize.button,
+                fontWeight: AppFontWeight.bold,
+                height: AppLineHeight.body,
+              ),
+            ),
           ),
           const SizedBox(height: 10),
           for (final p in r.points)
@@ -455,11 +549,22 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('· ', style: TextStyle(color: c.gold, fontSize: 12)),
+                  Text(
+                    '· ',
+                    style: TextStyle(
+                      color: c.gold,
+                      fontSize: AppFontSize.label,
+                    ),
+                  ),
                   Expanded(
-                    child: Text(p,
-                        style: TextStyle(
-                            color: c.textBody, fontSize: 12, height: 1.6)),
+                    child: Text(
+                      p,
+                      style: TextStyle(
+                        color: c.textBody,
+                        fontSize: AppFontSize.label,
+                        height: AppLineHeight.reading,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -475,26 +580,48 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('六亲（以卦宫五行为「我」）',
-              style: TextStyle(
-                  color: c.gold, fontSize: 11, fontWeight: FontWeight.bold)),
+          Text(
+            '六亲（以卦宫五行为「我」）',
+            style: TextStyle(
+              color: c.gold,
+              fontSize: AppFontSize.caption,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
           for (final lq in liuqinNames)
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
-              child: Text('$lq · ${liuqinMeaning[lq]}',
-                  style: TextStyle(color: c.textBody, fontSize: 11, height: 1.5)),
+              child: Text(
+                '$lq · ${liuqinMeaning[lq]}',
+                style: TextStyle(
+                  color: c.textBody,
+                  fontSize: AppFontSize.caption,
+                  height: AppLineHeight.body,
+                ),
+              ),
             ),
           const SizedBox(height: 8),
-          Text('六神（按日干起初爻顺布）',
-              style: TextStyle(
-                  color: c.gold, fontSize: 11, fontWeight: FontWeight.bold)),
+          Text(
+            '六神（按日干起初爻顺布）',
+            style: TextStyle(
+              color: c.gold,
+              fontSize: AppFontSize.caption,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
           for (final s in liushenOrder)
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
-              child: Text('$s · ${liushenMeaning[s]}',
-                  style: TextStyle(color: c.textBody, fontSize: 11, height: 1.5)),
+              child: Text(
+                '$s · ${liushenMeaning[s]}',
+                style: TextStyle(
+                  color: c.textBody,
+                  fontSize: AppFontSize.caption,
+                  height: AppLineHeight.body,
+                ),
+              ),
             ),
         ],
       ),
@@ -506,9 +633,13 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
     if (r == null) return '';
     final sb = StringBuffer('【六爻 · 纳甲断卦】\n');
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
-    sb.writeln('本卦：${r.benName}（${xiang[r.upperName]}${xiang[r.lowerName]}）'
-        ' · ${r.bagong.gong}宫${r.bagong.seqName}（${r.gongWuxing}）');
-    sb.writeln('日辰：${r.dayGan}${r.dayZhi} · 月建${r.monthZhi} · 用神「${r.yongShen}」');
+    sb.writeln(
+      '本卦：${r.benName}（${xiang[r.upperName]}${xiang[r.lowerName]}）'
+      ' · ${r.bagong.gong}宫${r.bagong.seqName}（${r.gongWuxing}）',
+    );
+    sb.writeln(
+      '日辰：${r.dayGan}${r.dayZhi} · 月建${r.monthZhi} · 用神「${r.yongShen}」',
+    );
     sb.writeln('\n—— 六爻纳甲（自上而下）——');
     for (var i = 5; i >= 0; i--) {
       final y = r.lines[i];
@@ -517,8 +648,10 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       if (i == r.bagong.shi) marks.add('世');
       if (i == r.bagong.ying) marks.add('应');
       if (y.changing) marks.add(y.yang ? '○' : '×');
-      sb.writeln('${yaoTitle(i, y.yang)}  ${y.liuqin} ${y.gan}${y.zhi}'
-          '（${zhiWuxing[y.zhi]}） ${y.shenshou}${marks.isEmpty ? "" : " ${marks.join('·')}"}');
+      sb.writeln(
+        '${yaoTitle(i, y.yang)}  ${y.liuqin} ${y.gan}${y.zhi}'
+        '（${zhiWuxing[y.zhi]}） ${y.shenshou}${marks.isEmpty ? "" : " ${marks.join('·')}"}',
+      );
     }
     sb.writeln('\n—— 断辞 ——');
     sb.writeln(r.judgment);
@@ -530,8 +663,10 @@ class _LiuyaoPageState extends ConsumerState<LiuyaoPage> {
       for (var i = 5; i >= 0; i--) {
         final y = r.bianLines![i];
         final ch = r.lines[i].changing ? ' 变' : '';
-        sb.writeln('${yaoTitle(i, y.yang)}  ${y.liuqin} ${y.gan}${y.zhi}'
-            '（${zhiWuxing[y.zhi]}） ${y.shenshou}$ch');
+        sb.writeln(
+          '${yaoTitle(i, y.yang)}  ${y.liuqin} ${y.gan}${y.zhi}'
+          '（${zhiWuxing[y.zhi]}） ${y.shenshou}$ch',
+        );
       }
     }
     sb.writeln('\n—— 志极 Jeenith · 叩问本心 ——');

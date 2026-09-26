@@ -2,8 +2,8 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -209,9 +209,9 @@ class _RitualPainter extends CustomPainter {
         Offset(cx, cy + base * 0.20),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleA),
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontSize: AppFontSize.metric,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
       // Subtitle.
@@ -223,8 +223,8 @@ class _RitualPainter extends CustomPainter {
           Offset(cx, cy + base * 0.27),
           TextStyle(
             color: AppColors.textSubtitle.withValues(alpha: subA * 0.8),
-            fontSize: 11,
-            letterSpacing: 6,
+            fontSize: AppFontSize.caption,
+            letterSpacing: AppLetterSpacing.display,
           ),
         );
       }
@@ -289,7 +289,7 @@ class _RitualPainter extends CustomPainter {
         color: (isDay ? AppColors.goldBright : AppColors.textPrimary)
             .withValues(alpha: alpha),
         fontSize: w * 0.42,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
 
@@ -312,7 +312,7 @@ class _RitualPainter extends CustomPainter {
         color: (isDay ? AppColors.goldBright : AppColors.textPrimary)
             .withValues(alpha: alpha),
         fontSize: w * 0.42,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
 
@@ -326,7 +326,7 @@ class _RitualPainter extends CustomPainter {
           color: (isDay ? AppColors.gold : AppColors.textMeta)
               .withValues(alpha: (alpha - 0.5) * 2 * 0.85),
           fontSize: w * 0.18,
-          letterSpacing: 2,
+          letterSpacing: AppLetterSpacing.label,
         ),
       );
     }

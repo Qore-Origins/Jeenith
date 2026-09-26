@@ -24,9 +24,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = AppClr.of(context);
-    final goldDivider = c.resolve(
-        const Color.fromRGBO(212, 168, 87, 0.18),
-        const Color.fromRGBO(155, 122, 42, 0.25));
+    final goldDivider = c.goldBorder;
     final configAsync = ref.watch(configProvider);
     return Scaffold(
       appBar: AppBar(
@@ -56,7 +54,7 @@ class SettingsPage extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text('跟随系统/浅色/深色',
                           style: TextStyle(
-                              color: c.textSubtitle, fontSize: 12)),
+                              color: c.textSubtitle, fontSize: AppFontSize.label)),
                     ],
                   ),
                 ),
@@ -98,13 +96,13 @@ class SettingsPage extends ConsumerWidget {
                 SwitchListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
                   title: Text('启用微交互动效',
                       style: TextStyle(color: c.textPrimary)),
                   subtitle: Text(
                       '按钮按动缩放/图标状态切换/卡片错峰等微交互（关闭后不影响功能）',
                       style:
-                          TextStyle(color: c.textSubtitle, fontSize: 12)),
+                          TextStyle(color: c.textSubtitle, fontSize: AppFontSize.label)),
                   value: cfg.animationsEnabled,
                   onChanged: (v) => ref
                       .read(configProvider.notifier)
@@ -119,12 +117,9 @@ class SettingsPage extends ConsumerWidget {
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.select_all, size: 16),
                           label: const Text('开启所有分类'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: c.goldBright,
-                            side: BorderSide(
-                                color: c.gold.withValues(alpha: 0.4)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                          style: AppButtonStyles.outlined(
+                            foregroundColor: c.jade,
+                            borderColor: c.goldBorder,
                           ),
                           onPressed: () => ref
                               .read(configProvider.notifier)
@@ -138,12 +133,9 @@ class SettingsPage extends ConsumerWidget {
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.deselect, size: 16),
                           label: const Text('关闭所有分类'),
-                          style: OutlinedButton.styleFrom(
+                          style: AppButtonStyles.outlined(
                             foregroundColor: c.textSubtitle,
-                            side: BorderSide(
-                                color: c.textSubtitle.withValues(alpha: 0.3)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                            borderColor: c.textSubtitle.withValues(alpha: 0.3),
                           ),
                           onPressed: () => ref
                               .read(configProvider.notifier)
@@ -159,16 +151,16 @@ class SettingsPage extends ConsumerWidget {
                 ...ref.watch(visibleTechsProvider).map((t) => ExpansionTile(
                       tilePadding: const EdgeInsets.symmetric(horizontal: 12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
                       collapsedShape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
                       iconColor: c.gold,
                       collapsedIconColor: c.textSubtitle,
                       title: Text(t.meta.displayName,
                           style: TextStyle(
                               color: c.goldBright,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold)),
+                              fontSize: AppFontSize.button,
+                              fontWeight: AppFontWeight.bold)),
                       children: [
                         _kindSwitch(context, cfg, ref, t.id, AnimationKind.entrance,
                             '入场仪式', '仪式入场动画（路由前置过渡）'),
@@ -192,12 +184,12 @@ class SettingsPage extends ConsumerWidget {
                 SwitchListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
                   title: Text('展示采样详情',
                       style: TextStyle(color: c.textPrimary)),
                   subtitle: Text('随机起卦后展示各熵源的真实采样值',
                       style:
-                          TextStyle(color: c.textSubtitle, fontSize: 12)),
+                          TextStyle(color: c.textSubtitle, fontSize: AppFontSize.label)),
                   value: cfg.showDetails,
                   onChanged: (v) =>
                       ref.read(configProvider.notifier).setShowDetails(v),
@@ -206,12 +198,12 @@ class SettingsPage extends ConsumerWidget {
                 SwitchListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
                   title: Text('在线大气噪声',
                       style: TextStyle(color: c.textPrimary)),
                   subtitle: Text('联网取 random.org 真随机增强熵源',
                       style:
-                          TextStyle(color: c.textSubtitle, fontSize: 12)),
+                          TextStyle(color: c.textSubtitle, fontSize: AppFontSize.label)),
                   value: cfg.useOnline,
                   onChanged: (v) =>
                       ref.read(configProvider.notifier).setUseOnline(v),
@@ -266,7 +258,7 @@ class SettingsPage extends ConsumerWidget {
             Text(
               '志极 Jeenith · 叩问本心，不忘初心\nCopyright (c) 2026 Qore',
               textAlign: TextAlign.center,
-              style: TextStyle(color: c.textHint, fontSize: 11, height: 1.6),
+              style: TextStyle(color: c.textHint, fontSize: AppFontSize.caption, height: AppLineHeight.reading),
             ),
           ],
         ),
@@ -281,11 +273,13 @@ class SettingsPage extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.panel,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.panelCompact),
         border: Border.all(
-            color: c.resolve(
-                const Color.fromRGBO(212, 168, 87, 0.22),
-                const Color.fromRGBO(155, 122, 42, 0.28))),
+          color: c.resolve(
+            AppColors.yang.withValues(alpha: 0.22),
+            AppColorsLight.yang.withValues(alpha: 0.28),
+          ),
+        ),
       ),
       child: Column(children: children),
     );
@@ -304,15 +298,15 @@ class SettingsPage extends ConsumerWidget {
     final c = AppClr.of(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
       leading: Icon(icon, color: iconColor ?? c.goldBright, size: 22),
       title: Text(title,
           style: TextStyle(
               color: titleColor ?? c.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.bold)),
+              fontSize: AppFontSize.button,
+              fontWeight: AppFontWeight.bold)),
       subtitle: Text(subtitle,
-          style: TextStyle(color: c.textSubtitle, fontSize: 12, height: 1.4)),
+          style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.label, height: AppLineHeight.compactBody)),
       trailing: Icon(Icons.chevron_right, color: c.textHint, size: 20),
       onTap: onTap,
     );
@@ -332,11 +326,11 @@ class SettingsPage extends ConsumerWidget {
     return SwitchListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
       dense: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
       title: Text(title,
-          style: TextStyle(color: c.textPrimary, fontSize: 14)),
+          style: TextStyle(color: c.textPrimary, fontSize: AppFontSize.body)),
       subtitle: Text(subtitle,
-          style: TextStyle(color: c.textSubtitle, fontSize: 11)),
+          style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.caption)),
       value: cfg.isAnimationEnabled(techId, kind),
       onChanged: (v) => ref
           .read(configProvider.notifier)
@@ -363,7 +357,7 @@ class SettingsPage extends ConsumerWidget {
             return AlertDialog(
               backgroundColor: c.card,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.panel),
                 side: BorderSide(color: c.goldBorder),
               ),
               title: Row(
@@ -374,9 +368,9 @@ class SettingsPage extends ConsumerWidget {
                   Text('清除数据',
                       style: TextStyle(
                           color: c.goldBright,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2)),
+                          fontSize: AppFontSize.title,
+                          fontWeight: AppFontWeight.bold,
+                          letterSpacing: AppLetterSpacing.label)),
                 ],
               ),
               content: SingleChildScrollView(
@@ -385,43 +379,43 @@ class SettingsPage extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('勾选要清除的内容，清除后应用将重启。',
-                        style: TextStyle(color: c.textBody, fontSize: 13)),
+                        style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall)),
                     const SizedBox(height: 12),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                       controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: c.goldBright,
-                      checkColor: Colors.black87,
+                      activeColor: c.jade,
+                      checkColor: c.onAction,
                       value: clearHistory,
                       onChanged: (v) =>
                           setSt(() => clearHistory = v ?? false),
                       title: Text('卜算历史记录（$histCount 条）',
                           style: TextStyle(
-                              color: c.textPrimary, fontSize: 14)),
+                              color: c.textPrimary, fontSize: AppFontSize.body)),
                       subtitle: Text('清除后无法恢复',
                           style: TextStyle(
-                              color: c.textSubtitle, fontSize: 11)),
+                              color: c.textSubtitle, fontSize: AppFontSize.caption)),
                     ),
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                       controlAffinity: ListTileControlAffinity.leading,
-                      activeColor: c.goldBright,
-                      checkColor: Colors.black87,
+                      activeColor: c.jade,
+                      checkColor: c.onAction,
                       value: clearGuide,
                       onChanged: (v) =>
                           setSt(() => clearGuide = v ?? false),
                       title: Text('使用指引标记（$guideCount 项）',
                           style: TextStyle(
-                              color: c.textPrimary, fontSize: 14)),
+                              color: c.textPrimary, fontSize: AppFontSize.body)),
                       subtitle: Text('清除后相关引导将重新弹出',
                           style: TextStyle(
-                              color: c.textSubtitle, fontSize: 11)),
+                              color: c.textSubtitle, fontSize: AppFontSize.caption)),
                     ),
                     const SizedBox(height: 6),
                     Text('设置（主题 / 动画 / 随机）不受影响。',
-                        style: TextStyle(color: c.textSubtitle, fontSize: 11)),
+                        style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.caption)),
                   ],
                 ),
               ),
@@ -432,10 +426,11 @@ class SettingsPage extends ConsumerWidget {
                       style: TextStyle(color: c.textSubtitle)),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        any ? c.gold : c.textHint,
-                    foregroundColor: Colors.black87,
+                  style: AppButtonStyles.filled(
+                    backgroundColor: any ? c.jade : c.panel,
+                    foregroundColor: any
+                        ? c.onAction
+                        : c.textHint,
                   ),
                   onPressed: any
                       ? () async {
@@ -464,7 +459,7 @@ class SettingsPage extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: c.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.panel),
           side: BorderSide(color: c.goldBorder),
         ),
         title: Row(
@@ -474,14 +469,14 @@ class SettingsPage extends ConsumerWidget {
             Text('还原初设',
                 style: TextStyle(
                     color: c.goldBright,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2)),
+                    fontSize: AppFontSize.title,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.label)),
           ],
         ),
         content: Text(
           '将把主题、动画/动效、随机与展示等所有设置恢复为默认值。\n\n卜算历史与使用指引不受影响。完成后应用将重启。',
-          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6),
+          style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading),
         ),
         actions: [
           TextButton(
@@ -489,9 +484,9 @@ class SettingsPage extends ConsumerWidget {
             child: Text('取消', style: TextStyle(color: c.textSubtitle)),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: c.gold,
-              foregroundColor: Colors.black87,
+            style: AppButtonStyles.filled(
+              backgroundColor: c.jade,
+              foregroundColor: c.onAction,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('还原并重启'),
@@ -513,7 +508,7 @@ class SettingsPage extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: c.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.panel),
           side: BorderSide(color: c.fireGlow.withValues(alpha: 0.5)),
         ),
         title: Row(
@@ -523,14 +518,14 @@ class SettingsPage extends ConsumerWidget {
             Text('归零重始',
                 style: TextStyle(
                     color: c.fireGlow,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2)),
+                    fontSize: AppFontSize.title,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.label)),
           ],
         ),
         content: Text(
           '此操作将清除全部数据（卜算历史 + 使用指引），并把所有设置恢复为默认。\n\n该操作不可撤销，完成后应用将重启。',
-          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6),
+          style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading),
         ),
         actions: [
           TextButton(
@@ -538,9 +533,9 @@ class SettingsPage extends ConsumerWidget {
             child: Text('取消', style: TextStyle(color: c.textSubtitle)),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: c.fireGlow,
-              foregroundColor: Colors.white,
+            style: AppButtonStyles.filled(
+              backgroundColor: c.gradeBad,
+              foregroundColor: c.onAction,
             ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('确认归零'),
@@ -597,7 +592,7 @@ class _GlmKeyTileState extends ConsumerState<_GlmKeyTile> {
               Text(empty ? '未设置' : '已设置',
                   style: TextStyle(
                       color: empty ? c.textHint : c.goldBright,
-                      fontSize: 11)),
+                      fontSize: AppFontSize.caption)),
             ],
           ),
         ),
@@ -608,11 +603,11 @@ class _GlmKeyTileState extends ConsumerState<_GlmKeyTile> {
               TextField(
                 controller: _ctrl,
                 obscureText: _obscure,
-                style: TextStyle(color: c.textPrimary, fontSize: 13),
+                style: TextStyle(color: c.textPrimary, fontSize: AppFontSize.bodySmall),
                 decoration: InputDecoration(
                   isDense: true,
                   hintText: '粘贴智谱 API key',
-                  hintStyle: TextStyle(color: c.textHint, fontSize: 12),
+                  hintStyle: TextStyle(color: c.textHint, fontSize: AppFontSize.label),
                   suffixIcon: IconButton(
                     icon: Icon(
                         _obscure ? Icons.visibility_off : Icons.visibility,
@@ -621,10 +616,10 @@ class _GlmKeyTileState extends ConsumerState<_GlmKeyTile> {
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                   enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.control),
                       borderSide: BorderSide(color: c.goldBorder)),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.control),
                       borderSide:
                           BorderSide(color: c.goldBright, width: 1.2)),
                 ),
@@ -636,7 +631,7 @@ class _GlmKeyTileState extends ConsumerState<_GlmKeyTile> {
                   Expanded(
                     child: Text(
                         '用于「解卦」页 AI 解读。智谱 GLM-4-Flash 免费，到 open.bigmodel.cn 申请。',
-                        style: TextStyle(color: c.textHint, fontSize: 10, height: 1.4)),
+                        style: TextStyle(color: c.textHint, fontSize: AppFontSize.micro, height: AppLineHeight.compactBody)),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -652,9 +647,10 @@ class _GlmKeyTileState extends ConsumerState<_GlmKeyTile> {
                                     behavior: SnackBarBehavior.floating,
                                     duration: Duration(seconds: 2)));
                           },
-                    style: FilledButton.styleFrom(
-                        backgroundColor: c.gold,
-                        foregroundColor: Colors.black87),
+                    style: AppButtonStyles.filled(
+                        backgroundColor: c.jade,
+                        foregroundColor:
+                            c.onAction),
                     child: const Text('保存'),
                   ),
                 ],

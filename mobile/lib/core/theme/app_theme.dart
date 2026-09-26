@@ -1,9 +1,17 @@
 // Copyright (c) 2026 Qore
 import 'package:flutter/material.dart';
 
+import 'design_tokens.dart';
+export 'design_tokens.dart';
+
 /// 全局色彩常量（从 Python QSS / PALACES 提取，保持视觉一致）。
 class AppColors {
   AppColors._();
+
+  // —— 通用绘制语义 ——
+  static const Color transparent = Color(0x00000000);
+  static const Color shadow = Color(0xFF000000);
+  static const Color paperWhite = Color(0xFFFFFFFF);
 
   // —— 背景 ——
   static const Color bg = Color(0xFF171C19);
@@ -58,6 +66,27 @@ class AppColors {
   static const Color gradeRough = Color(0xFFE0BF7E);
   static const Color gradeBad = Color(0xFFFF9077);
 
+  // —— 仪式绘制语义 ——
+  static const Color ritualWood = Color(0xFF6BAB6B);
+  static const Color ritualPaper = Color(0xFFE8D9B8);
+  static const Color ritualInk = Color(0xFF3A2E1F);
+  static const Color ritualStick = Color(0xFFC9A063);
+  static const Color ritualStickTip = Color(0xFFB23A3A);
+  static const Color ritualPaperBorder = Color(0xFFB89A5C);
+  static const Color ritualRoller = Color(0xFF6B4F1F);
+  static const Color ritualTube = Color(0xFF2A2233);
+  static const Color ritualTubeInner = Color(0xFF1B1626);
+  static const Color ritualDarkInk = Color(0xFF1A1208);
+  static const Color ritualBackground = Color.fromRGBO(12, 10, 18, 1);
+  static const Color ritualTaijiLight = Color(0xFFEEE6CD);
+  static const Color ritualTaijiDark = Color(0xFF14101C);
+  static const Color ritualEarthDark = Color(0xFF6A4A2A);
+  static const Color ritualEarthLight = Color(0xFF8A6A3A);
+  static const Color ritualEarthHighlight = Color(0xFFA88A5A);
+  static const Color sparkIgnite = Color(0xFFFFF0C0);
+  static const Color sparkCursor = Color(0xFFFFE6A0);
+  static const Color sparkTrail = Color(0xFFFFD782);
+
   /// 明度缩放（对应 Python darker()）。
   static Color darker(Color c, double f) {
     return Color.fromARGB(
@@ -72,6 +101,10 @@ class AppColors {
 /// 浅色主题色彩常量（v1.5.0 新增，与深色保持同等五色系语义）。
 class AppColorsLight {
   AppColorsLight._();
+
+  static const Color transparent = Color(0x00000000);
+  static const Color shadow = Color(0xFF000000);
+  static const Color paperWhite = Color(0xFFFFFFFF);
 
   // —— 背景（浅米色）——
   static const Color bg = Color(0xFFF0EEE5);
@@ -123,6 +156,10 @@ class AppColorsLight {
   static const Color gradeSteady = Color(0xFF8A6A1E);
   static const Color gradeRough = Color(0xFF6A4A14);
   static const Color gradeBad = Color(0xFFA02E0E);
+
+  static const Color ritualEarthDark = Color(0xFF8A6A3A);
+  static const Color ritualEarthLight = Color(0xFFA88A5A);
+  static const Color ritualDarkInk = Color(0xFF1A1208);
 }
 
 /// 主题感知色板：基于动画插值 t（0=深 1=浅），实现深/浅主题**渐变切换**。
@@ -161,6 +198,19 @@ class AppClr {
   Color get goldBorder =>
       _lerp(AppColors.goldBorder, AppColorsLight.goldBorder);
   Color get jade => _lerp(AppColors.jade, AppColorsLight.jade);
+  Color get onAction => _lerp(AppColors.bg, AppColorsLight.panel);
+  Color get shadow => _lerp(AppColors.shadow, AppColorsLight.shadow);
+  Color get ritualEarthDark =>
+      _lerp(AppColors.ritualEarthDark, AppColorsLight.ritualEarthDark);
+  Color get ritualEarthLight =>
+      _lerp(AppColors.ritualEarthLight, AppColorsLight.ritualEarthLight);
+  Color get ritualTaijiLight =>
+      _lerp(AppColors.ritualTaijiLight, AppColorsLight.yang);
+  Color get ritualTaijiDark =>
+      _lerp(AppColors.ritualTaijiDark, AppColorsLight.ritualDarkInk);
+  Color get sparkIgnite => _lerp(AppColors.sparkIgnite, AppColorsLight.gold);
+  Color get sparkCursor => _lerp(AppColors.sparkCursor, AppColorsLight.gold);
+  Color get sparkTrail => _lerp(AppColors.sparkTrail, AppColorsLight.gold);
 
   // —— 文字 ——
   Color get textHighlight =>
@@ -202,6 +252,14 @@ class AppClr {
   Color get gradeRough =>
       _lerp(AppColors.gradeRough, AppColorsLight.gradeRough);
   Color get gradeBad => _lerp(AppColors.gradeBad, AppColorsLight.gradeBad);
+
+  // —— 桌面窗口栏 ——
+  Color get windowBarBackground => bg;
+  Color get windowBarDivider =>
+      goldBorder.withValues(alpha: AppWindowChrome.dividerOpacity);
+  Color get windowControlHover => jade.withValues(alpha: AppWindowChrome.hoverOpacity);
+  Color get windowControlCloseHover =>
+      gradeBad.withValues(alpha: AppWindowChrome.closeHoverOpacity);
 }
 
 /// 根级主题动画插值载体（t: 0=深 1=浅）。
@@ -228,51 +286,392 @@ class AppFonts {
   static const String serif = 'SourceHanSerif';
 }
 
+/// Reusable typography roles. Use these instead of creating a font scale in a
+/// page or widget; colors follow the animated light/dark theme.
+class AppTypography {
+  final AppClr colors;
+
+  const AppTypography._(this.colors);
+
+  static AppTypography of(BuildContext context) =>
+      AppTypography._(AppClr.of(context));
+
+  TextStyle get display => TextStyle(
+    color: colors.textHighlight,
+    fontSize: AppFontSize.display,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+    height: AppLineHeight.heading,
+  );
+
+  TextStyle get title => TextStyle(
+    color: colors.textPrimary,
+    fontSize: AppFontSize.title,
+    fontWeight: AppFontWeight.bold,
+  );
+
+  TextStyle get brand => TextStyle(
+    color: colors.textHighlight,
+    fontSize: AppFontSize.wordmark,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+  );
+
+  TextStyle get brandCaption => TextStyle(
+    color: colors.textSubtitle,
+    fontSize: AppFontSize.footnote,
+    fontWeight: AppFontWeight.bold,
+    letterSpacing: AppLetterSpacing.label,
+    height: AppLineHeight.brand,
+    decoration: TextDecoration.none,
+  );
+
+  TextStyle get navigationLabel => TextStyle(
+    color: colors.textSubtitle,
+    fontSize: AppFontSize.bodySmall,
+    decoration: TextDecoration.none,
+  );
+
+  TextStyle get navigationSelectedLabel => TextStyle(
+    color: colors.textPrimary,
+    fontSize: AppFontSize.bodySmall,
+    fontWeight: AppFontWeight.semibold,
+    decoration: TextDecoration.none,
+  );
+
+  TextStyle get navigationGroup => TextStyle(
+    color: colors.textHint,
+    fontSize: AppFontSize.caption,
+    fontWeight: AppFontWeight.semibold,
+    letterSpacing: AppLetterSpacing.compact,
+    height: AppLineHeight.brand,
+    decoration: TextDecoration.none,
+  );
+
+  TextStyle get navigationFooter => TextStyle(
+    color: colors.textHint,
+    fontSize: AppFontSize.caption,
+    height: AppLineHeight.navigation,
+    decoration: TextDecoration.none,
+  );
+
+  TextStyle get sectionTitle => TextStyle(
+    color: colors.textSubtitle,
+    fontSize: AppFontSize.body,
+    fontWeight: AppFontWeight.bold,
+  );
+
+  TextStyle get subtitle => TextStyle(
+    color: colors.textPrimary,
+    fontSize: AppFontSize.bodyLarge,
+    fontWeight: AppFontWeight.semibold,
+  );
+
+  TextStyle get body => TextStyle(
+    color: colors.textBody,
+    fontSize: AppFontSize.body,
+    height: AppLineHeight.body,
+  );
+
+  TextStyle get bodySmall => TextStyle(
+    color: colors.textBody,
+    fontSize: AppFontSize.bodySmall,
+    height: AppLineHeight.body,
+  );
+
+  TextStyle get label => TextStyle(
+    color: colors.textMeta,
+    fontSize: AppFontSize.label,
+    fontWeight: AppFontWeight.medium,
+  );
+
+  TextStyle get caption =>
+      TextStyle(color: colors.textMeta, fontSize: AppFontSize.caption);
+
+  TextStyle get button => TextStyle(
+    color: colors.textPrimary,
+    fontSize: AppFontSize.button,
+    fontWeight: AppFontWeight.semibold,
+  );
+
+  TextStyle get secondaryButton => TextStyle(
+    color: colors.textBody,
+    fontSize: AppFontSize.bodySmall,
+    fontWeight: AppFontWeight.bold,
+  );
+}
+
+extension AppTypographyContext on BuildContext {
+  AppTypography get appTypography => AppTypography.of(this);
+}
+
+class AppSurfaceStyles {
+  AppSurfaceStyles._();
+
+  static BoxDecoration panel(AppClr colors) => BoxDecoration(
+    color: colors.panel,
+    borderRadius: BorderRadius.circular(AppRadius.panel),
+    border: Border.all(color: colors.goldBorder),
+  );
+}
+
+/// Shared Material button variants for intentional one-off states. Base
+/// geometry and typography remain owned by the app theme.
+class AppButtonStyles {
+  AppButtonStyles._();
+
+  static ButtonStyle filled({
+    Color? backgroundColor,
+    Color? foregroundColor,
+    EdgeInsetsGeometry? padding,
+    VisualDensity? visualDensity,
+  }) => FilledButton.styleFrom(
+    backgroundColor: backgroundColor,
+    foregroundColor: foregroundColor,
+    padding:
+        padding ??
+        const EdgeInsets.symmetric(
+          horizontal: AppSpacing.large,
+          vertical: AppSpacing.medium,
+        ),
+    visualDensity: visualDensity,
+    minimumSize: const Size(64, 42),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.button),
+    ),
+  );
+
+  static ButtonStyle outlined({
+    Color? foregroundColor,
+    Color? borderColor,
+    EdgeInsetsGeometry? padding,
+  }) => OutlinedButton.styleFrom(
+    foregroundColor: foregroundColor,
+    side: borderColor == null ? null : BorderSide(color: borderColor),
+    padding: padding,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.button),
+    ),
+  );
+
+  static ButtonStyle text({
+    Color? foregroundColor,
+    EdgeInsetsGeometry? padding,
+    VisualDensity? visualDensity,
+    Size? minimumSize,
+    MaterialTapTargetSize? tapTargetSize,
+  }) => TextButton.styleFrom(
+    foregroundColor: foregroundColor,
+    padding: padding,
+    visualDensity: visualDensity,
+    minimumSize: minimumSize,
+    tapTargetSize: tapTargetSize,
+  );
+
+}
+
 /// 中国风深色主题（Material 3）。
 ThemeData appTheme({bool isLight = false}) {
   if (isLight) return _lightTheme();
   return _darkTheme();
 }
 
+TextTheme _darkTextTheme() => const TextTheme(
+  displayLarge: TextStyle(
+    color: AppColors.textHighlight,
+    fontSize: AppFontSize.displayLarge,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+    height: AppLineHeight.display,
+  ),
+  displayMedium: TextStyle(
+    color: AppColors.textHighlight,
+    fontSize: AppFontSize.displaySmall,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+    height: AppLineHeight.display,
+  ),
+  headlineLarge: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.heading,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+  ),
+  headlineMedium: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.headingSmall,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+  ),
+  titleLarge: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.title,
+    fontWeight: AppFontWeight.bold,
+  ),
+  titleMedium: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.bodyLarge,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  titleSmall: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.body,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  bodyLarge: TextStyle(
+    color: AppColors.textBody,
+    fontSize: AppFontSize.bodyLarge,
+    height: AppLineHeight.body,
+  ),
+  bodyMedium: TextStyle(
+    color: AppColors.textBody,
+    fontSize: AppFontSize.body,
+    height: AppLineHeight.body,
+  ),
+  bodySmall: TextStyle(
+    color: AppColors.textBody,
+    fontSize: AppFontSize.bodySmall,
+    height: AppLineHeight.body,
+  ),
+  labelLarge: TextStyle(
+    color: AppColors.textPrimary,
+    fontSize: AppFontSize.button,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  labelMedium: TextStyle(
+    color: AppColors.textMeta,
+    fontSize: AppFontSize.label,
+    fontWeight: AppFontWeight.medium,
+  ),
+  labelSmall: TextStyle(
+    color: AppColors.textMeta,
+    fontSize: AppFontSize.caption,
+  ),
+);
+
+TextTheme _lightTextTheme() => const TextTheme(
+  displayLarge: TextStyle(
+    color: AppColorsLight.textHighlight,
+    fontSize: AppFontSize.displayLarge,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+    height: AppLineHeight.display,
+  ),
+  displayMedium: TextStyle(
+    color: AppColorsLight.textHighlight,
+    fontSize: AppFontSize.displaySmall,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+    height: AppLineHeight.display,
+  ),
+  headlineLarge: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.heading,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+  ),
+  headlineMedium: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.headingSmall,
+    fontWeight: AppFontWeight.bold,
+    fontFamily: AppFonts.serif,
+  ),
+  titleLarge: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.title,
+    fontWeight: AppFontWeight.bold,
+  ),
+  titleMedium: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.bodyLarge,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  titleSmall: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.body,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  bodyLarge: TextStyle(
+    color: AppColorsLight.textBody,
+    fontSize: AppFontSize.bodyLarge,
+    height: AppLineHeight.body,
+  ),
+  bodyMedium: TextStyle(
+    color: AppColorsLight.textBody,
+    fontSize: AppFontSize.body,
+    height: AppLineHeight.body,
+  ),
+  bodySmall: TextStyle(
+    color: AppColorsLight.textBody,
+    fontSize: AppFontSize.bodySmall,
+    height: AppLineHeight.body,
+  ),
+  labelLarge: TextStyle(
+    color: AppColorsLight.textPrimary,
+    fontSize: AppFontSize.button,
+    fontWeight: AppFontWeight.semibold,
+  ),
+  labelMedium: TextStyle(
+    color: AppColorsLight.textMeta,
+    fontSize: AppFontSize.label,
+    fontWeight: AppFontWeight.medium,
+  ),
+  labelSmall: TextStyle(
+    color: AppColorsLight.textMeta,
+    fontSize: AppFontSize.caption,
+  ),
+);
+
 ThemeData _darkTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
+    textTheme: _darkTextTheme(),
     scaffoldBackgroundColor: AppColors.bg,
     colorScheme: const ColorScheme.dark(
-      primary: AppColors.gold,
-      secondary: AppColors.goldBright,
-      tertiary: AppColors.jade,
+      primary: AppColors.jade,
+      secondary: AppColors.gold,
+      tertiary: AppColors.goldBright,
       surface: AppColors.bg,
-      onPrimary: Color(0xFF22251F),
-      onSecondary: Color(0xFF22251F),
-      onTertiary: Color(0xFF22251F),
+      onPrimary: AppColors.bg,
+      onSecondary: AppColors.bg,
+      onTertiary: AppColors.bg,
       onSurface: AppColors.textPrimary,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.transparent,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: TextStyle(
         color: AppColors.goldBright,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 2,
+        fontSize: AppFontSize.wordmark,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.label,
       ),
-      iconTheme: IconThemeData(color: AppColors.gold),
+      iconTheme: IconThemeData(color: AppColors.jade),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFF202721),
+      fillColor: AppColors.bgInner,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.control),
         borderSide: const BorderSide(color: AppColors.goldBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.goldBright),
+        borderRadius: BorderRadius.circular(AppRadius.control),
+        borderSide: const BorderSide(color: AppColors.jade),
       ),
       hintStyle: const TextStyle(color: AppColors.textHint),
+    ),
+    filledButtonTheme: FilledButtonThemeData(style: AppButtonStyles.filled()),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: AppButtonStyles.outlined(
+        foregroundColor: AppColors.jade,
+        borderColor: AppColors.goldBorder,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: AppButtonStyles.text(foregroundColor: AppColors.jade),
     ),
   );
 }
@@ -281,41 +680,52 @@ ThemeData _lightTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
+    textTheme: _lightTextTheme(),
     scaffoldBackgroundColor: AppColorsLight.bg,
     colorScheme: const ColorScheme.light(
-      primary: AppColorsLight.gold,
-      secondary: AppColorsLight.goldBright,
-      tertiary: AppColorsLight.jade,
+      primary: AppColorsLight.jade,
+      secondary: AppColorsLight.gold,
+      tertiary: AppColorsLight.goldBright,
       surface: AppColorsLight.bg,
-      onPrimary: Color(0xFFFFFEFA),
-      onSecondary: Color(0xFFFFFEFA),
-      onTertiary: Color(0xFFFFFEFA),
+      onPrimary: AppColorsLight.panel,
+      onSecondary: AppColorsLight.textPrimary,
+      onTertiary: AppColorsLight.textPrimary,
       onSurface: AppColorsLight.textPrimary,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColorsLight.transparent,
       elevation: 0,
       centerTitle: true,
       titleTextStyle: TextStyle(
         color: AppColorsLight.goldBright,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 2,
+        fontSize: AppFontSize.wordmark,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.label,
       ),
-      iconTheme: IconThemeData(color: AppColorsLight.gold),
+      iconTheme: IconThemeData(color: AppColorsLight.jade),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFFF3F2E9),
+      fillColor: AppColorsLight.bgInner,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.control),
         borderSide: const BorderSide(color: AppColorsLight.goldBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColorsLight.goldBright),
+        borderRadius: BorderRadius.circular(AppRadius.control),
+        borderSide: const BorderSide(color: AppColorsLight.jade),
       ),
       hintStyle: const TextStyle(color: AppColorsLight.textHint),
+    ),
+    filledButtonTheme: FilledButtonThemeData(style: AppButtonStyles.filled()),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: AppButtonStyles.outlined(
+        foregroundColor: AppColorsLight.jade,
+        borderColor: AppColorsLight.goldBorder,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: AppButtonStyles.text(foregroundColor: AppColorsLight.jade),
     ),
   );
 }

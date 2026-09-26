@@ -1,12 +1,12 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-  发布 GitHub Release（基于 gh CLI）。元数据来自 builds/release_history.json。
+  发布 GitHub Release（基于 gh CLI）。元数据来自 builds/release/release_history.json。
 
 .DESCRIPTION
   用 `gh release create` 一条命令创建 release + 上传 assets + 贴 notes——gh 处理认证
   与大文件上传，比手写 curl + REST API 更稳更短。需先 `gh auth login`。
-  实际 repo：HeYS-Snowe/Jeenith。
+  实际 repo：Qore-Origins/Jeenith。
 
 .PARAMETER Tag
   release tag，如 v2.8.1
@@ -21,7 +21,7 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Env
 $root = (Resolve-Path "$PSScriptRoot/../..").Path   # 项目根 Jeenith/
 
 # 读 release_history.json 取该 tag 的元数据
-$hist = Get-Content "$root/builds/release_history.json" -Raw -Encoding UTF8 | ConvertFrom-Json
+$hist = Get-Content "$root/builds/release/release_history.json" -Raw -Encoding UTF8 | ConvertFrom-Json
 $rel = $hist.releases | Where-Object { $_.tag -eq $Tag } | Select-Object -First 1
 if (-not $rel) { throw "release_history.json 中未找到 tag=$Tag" }
 
@@ -31,9 +31,10 @@ if (-not (Test-Path $notesPath)) { throw "notes 文件不存在: $notesPath" }
 # 组装 gh release create 参数
 $ghArgs = @(
     'release', 'create', $rel.tag,
-    '--repo', 'HeYS-Snowe/Jeenith',
+    '--repo', 'Qore-Origins/Jeenith',
     '--target', $rel.target,
     '--title', $rel.title,
+    '--latest',
     "--notes-file=$notesPath"
 )
 if ([bool]$rel.isPreRelease) { $ghArgs += '--prerelease' }
@@ -48,4 +49,4 @@ Write-Host "gh $($ghArgs -join ' ')" -ForegroundColor DarkGray
 if ($LASTEXITCODE -ne 0) { throw "gh release create 失败 (exit $LASTEXITCODE)" }
 
 Write-Host "[RELEASE] $Tag 已发布" -ForegroundColor Green
-Write-Host "  https://github.com/HeYS-Snowe/Jeenith/releases/tag/$Tag"
+Write-Host "  https://github.com/Qore-Origins/Jeenith/releases/tag/$Tag"

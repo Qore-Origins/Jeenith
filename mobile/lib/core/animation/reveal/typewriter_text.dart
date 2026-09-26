@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 /// ```dart
 /// TypewriterText(
 ///   '大安：万物初始，安定祥和。',
-///   style: TextStyle(color: AppColors.goldBright, fontSize: 16),
+///   style: TextStyle(color: AppColors.goldBright, fontSize: AppFontSize.bodyLarge),
 ///   speed: Duration(milliseconds: 35),
 /// )
 /// ```

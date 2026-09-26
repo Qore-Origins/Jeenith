@@ -246,10 +246,10 @@ class _RitualPainter extends CustomPainter {
       Offset.zero,
       TextStyle(
         color: heads
-            ? const Color(0xFF1A1208).withValues(alpha: alpha)
+            ? AppColors.ritualDarkInk.withValues(alpha: alpha)
             : AppColors.goldBright.withValues(alpha: 0.7 * alpha),
         fontSize: _coinR * 0.85,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
     canvas.restore();
@@ -302,8 +302,8 @@ class _RitualPainter extends CustomPainter {
       TextStyle(
         color: AppColors.gold.withValues(alpha: progress * 0.06),
         fontSize: size.shortestSide * 0.28,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 16,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.ritualDisplayWide,
       ),
     );
   }
@@ -324,7 +324,7 @@ class _RitualPainter extends CustomPainter {
         width: _lineW + padding * 2,
         height: (stackBottomY - stackTopY) + padding * 2,
       ),
-      const Radius.circular(8),
+      const Radius.circular(AppRadius.small),
     );
     // Soft fill glow.
     canvas.drawRRect(

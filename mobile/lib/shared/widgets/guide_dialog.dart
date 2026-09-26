@@ -74,7 +74,7 @@ class _GuideDialogState extends State<GuideDialog>
               sigmaY: 5 * blurT,
             ),
             child: Container(
-              color: Colors.black.withValues(alpha: 0.4 * blurT),
+              color: AppColors.shadow.withValues(alpha: 0.4 * blurT),
               child: Center(
                 child: Transform.scale(
                   scale: 0.85 + 0.15 * enterCurve.value,
@@ -83,7 +83,7 @@ class _GuideDialogState extends State<GuideDialog>
                     child: AlertDialog(
                       backgroundColor: c.card,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.panel),
                         side: BorderSide(color: c.goldBorder),
                       ),
                       title: Row(
@@ -94,9 +94,9 @@ class _GuideDialogState extends State<GuideDialog>
                           Text('使用方法',
                               style: TextStyle(
                                   color: c.goldBright,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2)),
+                                  fontSize: AppFontSize.title,
+                                  fontWeight: AppFontWeight.bold,
+                                  letterSpacing: AppLetterSpacing.label)),
                         ],
                       ),
                       content: SingleChildScrollView(
@@ -119,16 +119,16 @@ class _GuideDialogState extends State<GuideDialog>
                               '3. 可以将卦象的完整截图和问题一并发送给 AI，也可以自己查资料。',
                               style: TextStyle(
                                   color: c.textBody,
-                                  fontSize: 13,
-                                  height: 1.6),
+                                  fontSize: AppFontSize.bodySmall,
+                                  height: AppLineHeight.reading),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               '4. 点击起卦按钮前，心里默念问题，集中注意力，注意力达到顶点的一刹那起卦。',
                               style: TextStyle(
                                   color: c.textBody,
-                                  fontSize: 13,
-                                  height: 1.6),
+                                  fontSize: AppFontSize.bodySmall,
+                                  height: AppLineHeight.reading),
                             ),
                           ],
                         ),
@@ -143,7 +143,7 @@ class _GuideDialogState extends State<GuideDialog>
                             style: TextStyle(
                               color: ready ? c.gold : c.textHint,
                               fontWeight:
-                                  ready ? FontWeight.bold : FontWeight.normal,
+                                  ready ? AppFontWeight.bold : AppFontWeight.regular,
                             ),
                           ),
                         ),
@@ -175,11 +175,11 @@ class _GuideItem extends StatelessWidget {
         Text('$num. $title',
             style: TextStyle(
                 color: c.goldBright,
-                fontSize: 14,
-                fontWeight: FontWeight.bold)),
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold)),
         const SizedBox(height: 2),
         Text(body,
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6)),
+            style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading)),
       ],
     );
   }

@@ -15,7 +15,7 @@ class PalaceResultCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: c.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.panelCompact),
         border: Border.all(color: c.goldBorder),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
@@ -27,40 +27,40 @@ class PalaceResultCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: c.gold.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Text('第${data.order}宫',
                   style: TextStyle(
                       color: c.gold,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold)),
+                      fontSize: AppFontSize.caption,
+                      fontWeight: AppFontWeight.bold)),
             ),
             const SizedBox(width: 10),
             Text(data.title,
                 style: TextStyle(
                     color: data.accentColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold)),
+                    fontSize: AppFontSize.metric,
+                    fontWeight: AppFontWeight.bold)),
             const SizedBox(width: 8),
             Expanded(
                 child: Text(data.subtitle ?? '',
                     style: TextStyle(
-                        color: c.textMeta, fontSize: 11),
+                        color: c.textMeta, fontSize: AppFontSize.caption),
                     overflow: TextOverflow.ellipsis)),
             if (data.badge != null)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.control),
                   border: Border.all(
                       color: data.badgeColor ?? c.gold, width: 0.8),
                 ),
                 child: Text(data.badge!,
                     style: TextStyle(
                         color: data.accentColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
+                        fontSize: AppFontSize.label,
+                        fontWeight: AppFontWeight.bold)),
               ),
           ]),
           if (data.poem != null) ...[
@@ -68,14 +68,14 @@ class PalaceResultCard extends StatelessWidget {
             Text('「 ${data.poem} 」',
                 style: TextStyle(
                     color: c.goldBright,
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic)),
+                    fontSize: AppFontSize.bodySmall,
+                    fontStyle: AppFontStyle.italic)),
           ],
           if (data.meaning != null) ...[
             const SizedBox(height: 4),
             Text(data.meaning!,
                 style:
-                    TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
+                    TextStyle(color: c.textBody, fontSize: AppFontSize.label, height: AppLineHeight.body)),
           ],
           if (data.details != null && data.details!.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -97,10 +97,10 @@ class PalaceResultCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: c.gold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
       ),
       child: Text('$label：$content',
-          style: TextStyle(color: c.textMeta, fontSize: 11)),
+          style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption)),
     );
   }
 }

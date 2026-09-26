@@ -17,6 +17,7 @@ import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/dark_button.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 
@@ -30,6 +31,7 @@ class ChouqianPage extends ConsumerStatefulWidget {
 class _ChouqianPageState extends ConsumerState<ChouqianPage>
     with TickerProviderStateMixin {
   ChouqianResult? _last;
+  HistoryEntry? _resultHistoryEntry;
   bool _busy = false;
   late final AnimationController _shake;
   late final AnimationController _fall;
@@ -58,6 +60,7 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
     if (stick == null) return;
     setState(() {
       _last = divine(stick);
+      _resultHistoryEntry = restore;
     });
   }
 
@@ -74,7 +77,9 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
     _shake.forward(from: 0);
     // 摇签中段出签
     await Future.delayed(const Duration(milliseconds: 760));
-    final entropy = await ref.read(trueRandomProvider).generate(count: 1, vmax: stickCount);
+    final entropy = await ref
+        .read(trueRandomProvider)
+        .generate(count: 1, vmax: stickCount);
     if (!mounted) return;
     final result = divine(entropy.numbers.first);
     setState(() {
@@ -82,20 +87,24 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
       _busy = false;
     });
     _fall.forward(from: 0);
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'chouqian',
       techName: '抽签',
       time: DateTime.now(),
-      summary: '第${result.stick.number}签 · ${result.stick.title} · ${result.stick.grade.label}',
+      summary:
+          '第${result.stick.number}签 · ${result.stick.title} · ${result.stick.grade.label}',
       detail: _buildCopyText(result),
       extra: {'stick': result.stick.number},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _onReset() {
     setState(() {
       _last = null;
+      _resultHistoryEntry = null;
       _busy = false;
     });
     _shake.value = 0;
@@ -113,12 +122,15 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
         ),
         title: Column(
           children: [
-            const Text('抽　签', style: TextStyle(fontSize: 18)),
-            Text('百 签 问 运',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('抽　签', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '百 签 问 运',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -141,9 +153,9 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
                 '第 ${_last!.stick.number} 签',
                 style: TextStyle(
                   color: c.goldBright,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
+                  fontSize: AppFontSize.metric,
+                  fontWeight: AppFontWeight.bold,
+                  letterSpacing: AppLetterSpacing.decorative,
                 ),
               ),
             ),
@@ -153,10 +165,7 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
             onPressed: _busy ? null : _onDraw,
           ),
           const SizedBox(height: 8),
-          DarkButton(
-            text: '再抽一签',
-            onPressed: _busy ? null : _onReset,
-          ),
+          DarkButton(text: '再抽一签', onPressed: _busy ? null : _onReset),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -178,9 +187,10 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
           ),
           const SizedBox(height: 16),
           if (_last != null)
-            RepaintBoundary(
-              key: _boundaryKey,
-              child: _buildResult(_last!),
+            RepaintBoundary(key: _boundaryKey, child: _buildResult(_last!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
             ),
         ],
       ),
@@ -206,8 +216,8 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
             width: 110,
             height: 170,
             decoration: BoxDecoration(
-              color: c.resolve(const Color(0xFF6A4A2A), const Color(0xFF8A6A3A)),
-              borderRadius: BorderRadius.circular(20),
+              color: c.ritualEarthDark,
+              borderRadius: BorderRadius.circular(AppRadius.dialog),
               border: Border.all(color: c.goldBright, width: 2),
               boxShadow: [
                 BoxShadow(
@@ -233,8 +243,10 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
               width: 110,
               height: 16,
               decoration: BoxDecoration(
-                color: c.resolve(const Color(0xFF8A6A3A), const Color(0xFFA88A5A)),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                color: c.ritualEarthLight,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppRadius.dialog),
+                ),
                 border: Border.all(color: c.goldBright, width: 2),
               ),
             ),
@@ -248,7 +260,8 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
     final stick = r.stick;
     final gradeColor = _colorForGrade(stick.grade);
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('chouqian', AnimationKind.reveal) ??
@@ -260,21 +273,19 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
         replayKey: r,
         hero: Center(
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
               color: gradeColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(8),
-              border:
-                  Border.all(color: gradeColor.withValues(alpha: 0.6)),
+              borderRadius: BorderRadius.circular(AppRadius.small),
+              border: Border.all(color: gradeColor.withValues(alpha: 0.6)),
             ),
             child: Text(
               stick.grade.label,
               style: TextStyle(
                 color: gradeColor,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 6,
+                fontSize: AppFontSize.title,
+                fontWeight: AppFontWeight.bold,
+                letterSpacing: AppLetterSpacing.display,
               ),
             ),
           ),
@@ -285,18 +296,17 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
               stick.title,
               style: TextStyle(
                 color: c.goldBright,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 8,
+                fontSize: AppFontSize.metric,
+                fontWeight: AppFontWeight.bold,
+                letterSpacing: AppLetterSpacing.ritual,
               ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-                vertical: 14, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
             decoration: BoxDecoration(
               color: c.bgMid.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.small),
               border: Border.all(color: c.goldBorder),
             ),
             child: Text(
@@ -304,9 +314,9 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: c.textPrimary,
-                fontSize: 15,
-                height: 1.8,
-                letterSpacing: 1,
+                fontSize: AppFontSize.button,
+                height: AppLineHeight.ritual,
+                letterSpacing: AppLetterSpacing.subtle,
               ),
             ),
           ),
@@ -315,8 +325,8 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
             stick.interpretation,
             style: TextStyle(
               color: c.textBody,
-              fontSize: 13,
-              height: 1.6,
+              fontSize: AppFontSize.bodySmall,
+              height: AppLineHeight.reading,
             ),
           ),
           _sectionLabel('详注'),
@@ -324,16 +334,18 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
             stick.detail,
             style: TextStyle(
               color: c.textMeta,
-              fontSize: 12,
-              height: 1.6,
-              letterSpacing: 1,
+              fontSize: AppFontSize.label,
+              height: AppLineHeight.reading,
+              letterSpacing: AppLetterSpacing.subtle,
             ),
           ),
           Center(
             child: Text(
               '${r.time.toString().substring(0, 19)} 抽得',
-              style:
-                  TextStyle(color: c.textHint, fontSize: 11),
+              style: TextStyle(
+                color: c.textHint,
+                fontSize: AppFontSize.caption,
+              ),
             ),
           ),
         ],
@@ -353,9 +365,9 @@ class _ChouqianPageState extends ConsumerState<ChouqianPage>
             text,
             style: TextStyle(
               color: c.goldBright,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+              letterSpacing: AppLetterSpacing.label,
             ),
           ),
         ],
@@ -428,7 +440,7 @@ class _SticksPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(center: p, width: 6, height: 90),
-          const Radius.circular(3),
+          const Radius.circular(AppRadius.tiny),
         ),
         stickPaint,
       );
@@ -442,18 +454,30 @@ class _SticksPainter extends CustomPainter {
       final frontY = h * 0.3 - rise;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset(frontX, frontY), width: 8, height: 110),
-          const Radius.circular(4),
+          Rect.fromCenter(
+            center: Offset(frontX, frontY),
+            width: 8,
+            height: 110,
+          ),
+          const Radius.circular(AppRadius.compact),
         ),
         Paint()..color = clr.goldBright,
       );
       // 签头红色装饰
-      canvas.drawCircle(Offset(frontX, frontY - 58), 5, Paint()..color = clr.fire);
+      canvas.drawCircle(
+        Offset(frontX, frontY - 58),
+        5,
+        Paint()..color = clr.fire,
+      );
       // 签号
       final tp = TextPainter(
         text: TextSpan(
           text: '签',
-          style: TextStyle(color: clr.textHighlight, fontSize: 9, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: clr.textHighlight,
+            fontSize: AppFontSize.footnote,
+            fontWeight: AppFontWeight.bold,
+          ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
@@ -464,7 +488,5 @@ class _SticksPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SticksPainter old) =>
-      fallProgress != old.fallProgress ||
-      busy != old.busy ||
-      clr != old.clr;
+      fallProgress != old.fallProgress || busy != old.busy || clr != old.clr;
 }

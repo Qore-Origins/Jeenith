@@ -79,10 +79,10 @@ class _HexPainter extends CustomPainter {
     for (var i = 0; i < 6; i++) {
       final y = baseY - i * spacing;
       _drawText(canvas, _posNames[i], Offset(x0 - 18, y),
-          TextStyle(color: clr.textMeta, fontSize: 11),
+          TextStyle(color: clr.textMeta, fontSize: AppFontSize.caption),
           align: TextAlign.right);
       _drawText(canvas, _posNames[i], Offset(x1 + 18, y),
-          TextStyle(color: clr.textMeta, fontSize: 11));
+          TextStyle(color: clr.textMeta, fontSize: AppFontSize.caption));
 
       if (i >= revealed || lines == null) {
         // 占位：淡线

@@ -103,7 +103,7 @@ class _TechGuideOverlayState extends State<TechGuideOverlay>
           return BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5 * blurT, sigmaY: 5 * blurT),
             child: Container(
-              color: Colors.black.withValues(alpha: 0.4 * blurT),
+              color: AppColors.shadow.withValues(alpha: 0.4 * blurT),
               child: Center(
                 child: Transform.scale(
                   scale: 0.85 + 0.15 * enterCurve.value,
@@ -112,7 +112,7 @@ class _TechGuideOverlayState extends State<TechGuideOverlay>
                     child: AlertDialog(
                       backgroundColor: c.card,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(AppRadius.panel),
                         side: BorderSide(color: c.goldBorder),
                       ),
                       title: Row(
@@ -122,9 +122,9 @@ class _TechGuideOverlayState extends State<TechGuideOverlay>
                           Text(widget.title,
                               style: TextStyle(
                                   color: c.goldBright,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 2)),
+                                  fontSize: AppFontSize.title,
+                                  fontWeight: AppFontWeight.bold,
+                                  letterSpacing: AppLetterSpacing.label)),
                         ],
                       ),
                       content: SingleChildScrollView(
@@ -148,7 +148,7 @@ class _TechGuideOverlayState extends State<TechGuideOverlay>
                             style: TextStyle(
                               color: ready ? c.gold : c.textHint,
                               fontWeight:
-                                  ready ? FontWeight.bold : FontWeight.normal,
+                                  ready ? AppFontWeight.bold : AppFontWeight.regular,
                             ),
                           ),
                         ),
@@ -177,11 +177,11 @@ class _StepItem extends StatelessWidget {
         Text(step.title,
             style: TextStyle(
                 color: c.goldBright,
-                fontSize: 14,
-                fontWeight: FontWeight.bold)),
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold)),
         const SizedBox(height: 2),
         Text(step.body,
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6)),
+            style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading)),
       ],
     );
   }

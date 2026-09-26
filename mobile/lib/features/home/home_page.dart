@@ -113,22 +113,17 @@ class _HomePageState extends ConsumerState<HomePage>
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.panel,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: c.resolve(
-            const Color.fromRGBO(212, 168, 87, 0.30),
-            const Color.fromRGBO(155, 122, 42, 0.35),
-          ),
-        ),
+        borderRadius: BorderRadius.circular(AppRadius.panelCompact),
+        border: Border.all(color: c.goldBorder),
       ),
       child: ExpansionTile(
         controller: _guideController,
         initiallyExpanded: _guideExpanded,
         onExpansionChanged: (v) => setState(() => _guideExpanded = v),
         tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.panelCompact)),
         collapsedShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.panelCompact),
         ),
         iconColor: c.gold,
         collapsedIconColor: c.textSubtitle,
@@ -153,9 +148,9 @@ class _HomePageState extends ConsumerState<HomePage>
               '使用方法',
               style: TextStyle(
                 color: c.goldBright,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+                letterSpacing: AppLetterSpacing.label,
               ),
             ),
           ],
@@ -170,16 +165,16 @@ class _HomePageState extends ConsumerState<HomePage>
                   '1. 单一卜算术起卦',
                   style: TextStyle(
                     color: c.goldBright,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
                   ),
                 ),
                 Text(
                   '第一次问大致的问题，第二次问细致的问题。',
                   style: TextStyle(
                     color: c.textBody,
-                    fontSize: 12,
-                    height: 1.5,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -187,16 +182,16 @@ class _HomePageState extends ConsumerState<HomePage>
                   '2. 多卜算术组合使用',
                   style: TextStyle(
                     color: c.goldBright,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
                   ),
                 ),
                 Text(
                   '先用一种卜算术起卦问大致的问题，再用另外一种起卦问细节上的问题。',
                   style: TextStyle(
                     color: c.textBody,
-                    fontSize: 12,
-                    height: 1.5,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -204,8 +199,8 @@ class _HomePageState extends ConsumerState<HomePage>
                   '3. 可以将卦象的完整截图和问题一并发送给 AI，也可以自己查资料。',
                   style: TextStyle(
                     color: c.textBody,
-                    fontSize: 12,
-                    height: 1.5,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -213,8 +208,8 @@ class _HomePageState extends ConsumerState<HomePage>
                   '4. 点击起卦按钮前，心里默念问题，集中注意力，注意力达到顶点的一刹那起卦。',
                   style: TextStyle(
                     color: c.textBody,
-                    fontSize: 12,
-                    height: 1.5,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
                   ),
                 ),
               ],
@@ -237,7 +232,7 @@ class _HomePageState extends ConsumerState<HomePage>
             color: c.textPrimary,
             fontFamily: AppFonts.serif,
             fontSize: desktop ? 36 : 40,
-            fontWeight: FontWeight.w700,
+            fontWeight: AppFontWeight.bold,
             letterSpacing: desktop ? 6 : 8,
           ),
         ),
@@ -245,7 +240,7 @@ class _HomePageState extends ConsumerState<HomePage>
         Text(
           Branding.tagline,
           textAlign: desktop ? TextAlign.left : TextAlign.center,
-          style: TextStyle(color: c.textMeta, fontSize: 12, letterSpacing: 2.2),
+          style: TextStyle(color: c.textMeta, fontSize: AppFontSize.label, letterSpacing: AppLetterSpacing.labelWide),
         ),
       ],
     );
@@ -291,15 +286,15 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 
   Widget _aiQuickEntry(AppClr c) => Material(
-    color: Colors.transparent,
+    color: AppColors.transparent,
     child: InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.panel),
       onTap: () => _startExit(() => context.go('/jiekua')),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: c.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.panel),
           border: Border.all(color: c.jade.withValues(alpha: 0.34)),
         ),
         child: Row(
@@ -309,7 +304,7 @@ class _HomePageState extends ConsumerState<HomePage>
               height: 40,
               decoration: BoxDecoration(
                 color: c.jade.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.button),
               ),
               child: Icon(Icons.auto_awesome_outlined, color: c.jade, size: 21),
             ),
@@ -322,14 +317,14 @@ class _HomePageState extends ConsumerState<HomePage>
                     '从问题开始',
                     style: TextStyle(
                       color: c.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppFontSize.body,
+                      fontWeight: AppFontWeight.semibold,
                     ),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     '先梳理困惑，再选择适合的方法',
-                    style: TextStyle(color: c.textMeta, fontSize: 11),
+                    style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
                   ),
                 ],
               ),
@@ -436,7 +431,7 @@ class _HomePageState extends ConsumerState<HomePage>
                                                 color: meta.accentColor
                                                     .withValues(alpha: 0.16),
                                                 borderRadius:
-                                                    BorderRadius.circular(12),
+                                                    BorderRadius.circular(AppRadius.button),
                                               ),
                                               child: Icon(
                                                 Icons.auto_awesome,
@@ -448,17 +443,17 @@ class _HomePageState extends ConsumerState<HomePage>
                                             Text(
                                               meta.displayName,
                                               style: TextStyle(
-                                                color: meta.accentColor,
+                                                color: c.textPrimary,
                                                 fontSize: desktop ? 21 : 22,
-                                                fontWeight: FontWeight.w600,
+                                                fontWeight: AppFontWeight.semibold,
                                               ),
                                             ),
                                             Text(
                                               meta.subtitle,
                                               style: TextStyle(
                                                 color: c.textSubtitle,
-                                                fontSize: 11,
-                                                letterSpacing: 1.4,
+                                                fontSize: AppFontSize.caption,
+                                                letterSpacing: AppLetterSpacing.displayCompact,
                                               ),
                                             ),
                                             const SizedBox(height: 6),
@@ -467,8 +462,8 @@ class _HomePageState extends ConsumerState<HomePage>
                                                 meta.description,
                                                 style: TextStyle(
                                                   color: c.textBody,
-                                                  fontSize: 11,
-                                                  height: 1.4,
+                                                  fontSize: AppFontSize.caption,
+                                                  height: AppLineHeight.compactBody,
                                                 ),
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,

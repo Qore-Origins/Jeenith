@@ -56,17 +56,18 @@ your_project/                       # 仓库根目录（solution root）
 │   │           └── app_app-release.apk_20260702_191429.apk
 │   └── build_history.json          # 历史记录副本 1（项目内）
 │
-└── builds/                         # 持久化归档目录（核心产物库，按平台分类）
-    ├── android/                    # Android APK（脚本自动归档）
-    │   ├── Loop_0.0.14_fix_20260625_01.apk
-    │   ├── Loop_0.0.14_fix_20260625_02.apk     # 同日同版本第 2 次构建
-    │   └── Loop_0.1.0_fix_20260702_01.apk      # minor 升级
-    ├── windows/                    # Windows 桌面 zip（手动归档）
-    │   └── Loop_0.1.0_fix_20260702_01_windows_x64.zip
-    ├── release_notes/              # 各版本 Release 说明 markdown（真实换行，复制粘贴到平台 notes 框）
-    │   └── release_notes_v0.1.0.md
-    ├── build_history.json          # 构建历史（归档区主副本）
-    └── release_history.json        # 平台发布记录（GitHub Release 等）
+└── builds/                         # 持久化归档目录
+    └── release/                    # 正式分发产物（按平台分类）
+        ├── android/                # Android APK（脚本自动归档）
+        │   ├── Loop_0.0.14_fix_20260625_01.apk
+        │   ├── Loop_0.0.14_fix_20260625_02.apk
+        │   └── Loop_0.1.0_fix_20260702_01.apk
+        ├── windows/                # Windows 桌面 zip（手动归档）
+        │   └── Loop_0.1.0_fix_20260702_01_windows_x64.zip
+        ├── release_notes/          # 各版本 Release 说明 markdown
+        │   └── release_notes_v0.1.0.md
+        ├── build_history.json      # 构建历史（归档区主副本）
+        └── release_history.json    # 平台发布记录（GitHub Release 等）
 
 ```
 
@@ -77,10 +78,10 @@ your_project/                       # 仓库根目录（solution root）
 | `scripts/build_apk.ps1` | 主构建脚本 | ✅ 是 |
 | `build/app/outputs/flutter-apk/` | Flutter 原始输出 | ❌ 否（gitignore） |
 | `build/app/outputs/flutter-apk/backup/` | 原始 APK 时间戳备份 | ❌ 否 |
-| `builds/android/`、`builds/windows/` | 持久化归档区（按平台分类，APK/zip） | ❌ 否（产物，用 NAS/云盘备份） |
+| `builds/release/android/`、`builds/release/windows/` | 持久化归档区（按平台分类，APK/zip） | ❌ 否（产物，用 NAS/云盘备份） |
 | `build_history.json`（两份） | 构建历史 JSON | ✅ 是 |
-| `builds/release_history.json` | 平台发布记录 | ✅ 是 |
-| `builds/release_notes/*.md` | 各版本 Release 说明 markdown | ✅ 是 |
+| `builds/release/release_history.json` | 平台发布记录 | ✅ 是 |
+| `builds/release/release_notes/*.md` | 各版本 Release 说明 markdown | ✅ 是 |
 
 ---
 
@@ -212,7 +213,9 @@ param(
     [ValidateSet("release", "beta", "alpha", "rc", "fix", "hotfix", "feature", "dev", "debug")]
     [string]$Status = "release",
 
-    [string]$TargetVersion
+    [string]$TargetVersion,
+
+    [switch]$NoPub
 )
 
 $ErrorActionPreference = "Stop"
@@ -315,12 +318,12 @@ $buildDate = Get-BuildDate
 $apkOutputDir = Join-Path $projectRoot "build\app\outputs\flutter-apk"
 
 $solutionRoot = Split-Path -Parent $projectRoot
-$buildsDir = Join-Path $solutionRoot "builds"
+$buildsDir = Join-Path $solutionRoot "builds\release"
 if (-not (Test-Path $buildsDir)) {
     New-Item -ItemType Directory -Path $buildsDir | Out-Null
 }
 
-# APK 按平台分类归档到 builds/android/（Windows zip 手动归档到 builds/windows/）
+# APK 按平台分类归档到 builds/release/android/（Windows zip 手动归档到 builds/release/windows/）
 $androidDir = Join-Path $buildsDir "android"
 if (-not (Test-Path $androidDir)) {
     New-Item -ItemType Directory -Path $androidDir | Out-Null
@@ -347,7 +350,9 @@ $buildSequence = Get-BuildSequence -buildsDir $androidDir -buildDate $buildDate 
 
 Write-Host "Building..." -ForegroundColor Green
 Set-Location $projectRoot
-& flutter build apk --$BuildType
+$flutterBuildArgs = @("build", "apk", "--$BuildType")
+if ($NoPub) { $flutterBuildArgs += "--no-pub" }
+& flutter @flutterBuildArgs
 
 if ($LASTEXITCODE -ne 0) {
     # 构建失败：回滚版本号
@@ -371,7 +376,7 @@ if (Rename-APK -apkPath $apkFile -status $Status -version $releaseVersion -build
     $buildsApkPath = Join-Path $androidDir $newApkName
 
     Copy-Item -Path $newApkPath -Destination $buildsApkPath -Force
-    Write-Host "[ARCHIVE] Copied to builds/android: $newApkName" -ForegroundColor Green
+    Write-Host "[ARCHIVE] Copied to builds/release/android: $newApkName" -ForegroundColor Green
 
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Cyan
@@ -426,10 +431,10 @@ pwsh -File scripts/build_apk.ps1 -BuildType debug -Status dev
 | 文件位置 | 角色 | schema 风格 |
 |----------|------|-------------|
 | `your_app/build_history.json` | 项目内副本 | version 与 buildNumber 分离 |
-| `builds/build_history.json` | 归档区主副本 | version 合并显示（带 buildNumber） |
+| `builds/release/build_history.json` | 归档区主副本 | version 合并显示（带 buildNumber） |
 
 > 产物按平台分类归档后，记录里的 `targetPath` / `filePath` 也相应带平台子目录：
-> APK → `builds/android/`，Windows zip → `builds/windows/`。
+> APK → `builds/release/android/`，Windows zip → `builds/release/windows/`。
 
 **为什么要两份？**
 
@@ -438,7 +443,7 @@ pwsh -File scripts/build_apk.ps1 -BuildType debug -Status dev
 
 ### 7.2 Schema 示例
 
-**builds/build_history.json（主副本，详细字段）**：
+**builds/release/build_history.json（主副本，详细字段）**：
 
 ```json
 {
@@ -515,13 +520,13 @@ Get-FileHash "D:\path\to\file.apk" -Algorithm SHA256 | Select-Object -ExpandProp
 
 ### 7.5 平台发布记录（release_history.json + release_notes/）
 
-`builds/release_history.json` 记录在 GitHub 等平台发布的 Release 信息，字段对应 GitHub "New release" 表单：
+`builds/release/release_history.json` 记录在 GitHub 等平台发布的 Release 信息，字段对应 GitHub "New release" 表单：
 
 | 字段 | 说明 |
 |------|------|
 | `tag` / `target` | Release 标签（`v<语义版本>`）/ 目标分支 |
 | `title` | Release 标题 |
-| `notesFile` | 指向 `builds/release_notes/release_notes_<tag>.md`——**notes 正文存独立 md 文件**（真实换行，便于直接复制粘贴到平台 notes 框，避免 JSON `\n` 转义在粘贴时失效） |
+| `notesFile` | 指向 `builds/release/release_notes/release_notes_<tag>.md`——**notes 正文存独立 md 文件**（真实换行，便于直接复制粘贴到平台 notes 框，避免 JSON `\n` 转义在粘贴时失效） |
 | `assets[]` | 发布附件（APK + Windows zip），含 `size` / `sha256` / `localPath` / `downloadUrl` |
 | `label` / `isLatest` / `isPreRelease` | Latest / Pre-release 标记 |
 | `status` | `draft`（待发布）/ `published`（已发布）/ `unpublished`（仅本地构建，未上平台） |

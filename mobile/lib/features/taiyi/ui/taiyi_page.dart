@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 import '../algorithm/geju.dart';
@@ -25,11 +26,31 @@ import '../data/taiyi_data.dart';
 /// 5×5 太乙盘布局：每格存十六间辰索引（-1 空 / -2 中宫）。
 /// 外圈顺时针：巽 巳 午 未 坤 申 酉 戌 乾 亥 子 丑 艮 寅 卯 辰。
 const _layout = <int>[
-  8, 9, 10, 11, 12,
-  7, -1, -1, -1, 13,
-  6, -1, -2, -1, 14,
-  5, -1, -1, -1, 15,
-  4, 3, 2, 1, 0,
+  8,
+  9,
+  10,
+  11,
+  12,
+  7,
+  -1,
+  -1,
+  -1,
+  13,
+  6,
+  -1,
+  -2,
+  -1,
+  14,
+  5,
+  -1,
+  -1,
+  -1,
+  15,
+  4,
+  3,
+  2,
+  1,
+  0,
 ];
 
 class TaiyiPage extends ConsumerStatefulWidget {
@@ -44,6 +65,7 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
   final _day = TextEditingController();
   final _hour = TextEditingController();
   TaiyiResult? _r;
+  HistoryEntry? _resultHistoryEntry;
   final GlobalKey _boundaryKey = GlobalKey();
 
   @override
@@ -87,13 +109,16 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
     final m = extra['month'] as int?;
     final d = extra['day'] as int?;
     final h = extra['hour'] as int?;
-    if (y == null || m == null || d == null || h == null || h < 0 || h > 23) return;
+    if (y == null || m == null || d == null || h == null || h < 0 || h > 23) {
+      return;
+    }
     setState(() {
       _year.text = y.toString();
       _month.text = m.toString();
       _day.text = d.toString();
       _hour.text = h.toString();
       _r = divine(y, m, d, h);
+      _resultHistoryEntry = restore;
     });
   }
 
@@ -113,20 +138,25 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
     final berr = validateBirth(y, m, d, h);
     if (berr != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating));
+        SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating),
+      );
       return;
     }
     setState(() => _r = divine(y, m, d, h));
     FocusScope.of(context).unfocus();
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'taiyi',
       techName: '太乙神数',
       time: DateTime.now(),
-      summary: _r == null ? '' : '${_r!.isYang ? "阳" : "阴"}遁${_r!.ju}局·太乙${_r!.taiyiGong}宫',
+      summary: _r == null
+          ? ''
+          : '${_r!.isYang ? "阳" : "阴"}遁${_r!.ju}局·太乙${_r!.taiyiGong}宫',
       detail: _buildCopyText(),
       extra: {'year': y, 'month': m, 'day': d, 'hour': h},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _fillNow() {
@@ -151,10 +181,15 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
         ),
         title: Column(
           children: [
-            const Text('太乙神数', style: TextStyle(fontSize: 18)),
-            Text('三 式 之 首',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('太乙神数', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '三 式 之 首',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -166,8 +201,13 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('公历时辰（年 月 日 时 0-23）',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '公历时辰（年 月 日 时 0-23）',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -186,12 +226,16 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
                   child: TextButton.icon(
                     onPressed: _fillNow,
                     icon: const Icon(Icons.access_time, size: 16),
-                    label: const Text('获取当前时间',
-                        style: TextStyle(fontSize: 12)),
-                    style: TextButton.styleFrom(
-                      foregroundColor: c.goldBright,
+                    label: const Text(
+                      '获取当前时间',
+                      style: TextStyle(fontSize: AppFontSize.label),
+                    ),
+                    style: AppButtonStyles.text(
+                      foregroundColor: c.jade,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 2),
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       minimumSize: const Size(0, 28),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -203,7 +247,10 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: CopyResultButton(text: _buildCopyText(), enabled: _r != null),
+                      child: CopyResultButton(
+                        text: _buildCopyText(),
+                        enabled: _r != null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -221,6 +268,10 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
           const SizedBox(height: 14),
           if (_r != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_r!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 10),
         ],
       ),
@@ -228,14 +279,15 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
   }
 
   Widget _f(TextEditingController c, String hint) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint, isDense: true),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(hintText: hint, isDense: true),
+  );
 
   Widget _buildResult(TaiyiResult r) {
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('taiyi', AnimationKind.reveal) ??
@@ -248,65 +300,98 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(r.lunarDisplay,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              r.lunarDisplay,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('八字：${r.bazi}',
-                style: TextStyle(color: c.textBody, fontSize: 13)),
+            Text(
+              '八字：${r.bazi}',
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.bodySmall,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('太乙积年：${r.jinian}',
-                style: TextStyle(color: c.textMeta, fontSize: 11)),
+            Text(
+              '太乙积年：${r.jinian}',
+              style: TextStyle(
+                color: c.textMeta,
+                fontSize: AppFontSize.caption,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Text(r.isYang ? '阳遁' : '阴遁',
-                    style: TextStyle(
-                        color: r.isYang ? c.gold : c.waterDeepGlow,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4)),
+                Text(
+                  r.isYang ? '阳遁' : '阴遁',
+                  style: TextStyle(
+                    color: r.isYang ? c.gold : c.waterDeepGlow,
+                    fontSize: AppFontSize.metric,
+                    fontWeight: AppFontWeight.bold,
+                    letterSpacing: AppLetterSpacing.decorative,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Text('第 ${r.ju} 局',
-                    style: TextStyle(
-                        color: c.fireGlow,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '第 ${r.ju} 局',
+                  style: TextStyle(
+                    color: c.fireGlow,
+                    fontSize: AppFontSize.title,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
-                Text('太乙·${taiyiJianchen[r.taiyiJc]}${r.taiyiGong}宫',
-                    style: TextStyle(
-                        color: c.gold, fontSize: 13, fontWeight: FontWeight.bold)),
+                Text(
+                  '太乙·${taiyiJianchen[r.taiyiJc]}${r.taiyiGong}宫',
+                  style: TextStyle(
+                    color: c.gold,
+                    fontSize: AppFontSize.bodySmall,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
       sections: [
-        Text('◆ 太乙十六间辰盘',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 太乙十六间辰盘',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(6),
           child: _buildPlate(r),
         ),
-        Text('◆ 主客神将',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 主客神将',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildGeneralsTable(r),
-        Text('◆ 格局断辞',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 格局断辞',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildGejuPanel(r),
       ],
     );
@@ -331,7 +416,12 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
 
     if (jc == -1) {
       // 空格（盘内四角空白）
-      return Container(decoration: BoxDecoration(color: c.bgInner.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(4)));
+      return Container(
+        decoration: BoxDecoration(
+          color: c.bgInner.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(AppRadius.compact),
+        ),
+      );
     }
     if (jc == -2) {
       // 中宫
@@ -339,19 +429,32 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
       return Container(
         decoration: BoxDecoration(
           color: c.gold.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppRadius.compactRound),
           border: Border.all(color: c.gold, width: 1.2),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('中5', style: TextStyle(color: c.gold, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text(
+              '中5',
+              style: TextStyle(
+                color: c.gold,
+                fontSize: AppFontSize.label,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             if (roles.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Text(roles.join('\n'),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: c.fireGlow, fontSize: 8, height: 1.2)),
+                child: Text(
+                  roles.join('\n'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: c.fireGlow,
+                    fontSize: AppFontSize.ornament,
+                    height: AppLineHeight.display,
+                  ),
+                ),
               ),
           ],
         ),
@@ -371,37 +474,57 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(AppRadius.compactSoft),
         border: Border.all(
-            color: border, width: isTaiyi ? 1.6 : (roles.isNotEmpty ? 1.0 : 0.5)),
+          color: border,
+          width: isTaiyi ? 1.6 : (roles.isNotEmpty ? 1.0 : 0.5),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // 顶：宫数
-          Text('$gong',
-              style: TextStyle(
-                  color: isTaiyi ? c.goldBright : c.textMeta,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            '$gong',
+            style: TextStyle(
+              color: isTaiyi ? c.goldBright : c.textMeta,
+              fontSize: AppFontSize.caption,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           // 中：间辰 + 神名
           Column(
             children: [
-              Text(taiyiJianchen[jc],
-                  style: TextStyle(
-                      color: isTaiyi ? c.gold : c.textPrimary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold)),
-              Text(taiyiShishen[jc],
-                  style: TextStyle(color: c.textSubtitle, fontSize: 8, height: 1.1)),
+              Text(
+                taiyiJianchen[jc],
+                style: TextStyle(
+                  color: isTaiyi ? c.gold : c.textPrimary,
+                  fontSize: AppFontSize.micro,
+                  fontWeight: AppFontWeight.bold,
+                ),
+              ),
+              Text(
+                taiyiShishen[jc],
+                style: TextStyle(
+                  color: c.textSubtitle,
+                  fontSize: AppFontSize.ornament,
+                  height: AppLineHeight.compact,
+                ),
+              ),
             ],
           ),
           // 底：角色标记
           if (roles.isNotEmpty)
-            Text(roles.join(' '),
-                textAlign: TextAlign.center,
-                style: TextStyle(color: c.fireGlow, fontSize: 8, height: 1.1)),
+            Text(
+              roles.join(' '),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: c.fireGlow,
+                fontSize: AppFontSize.ornament,
+                height: AppLineHeight.compact,
+              ),
+            ),
         ],
       ),
     );
@@ -463,22 +586,29 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
   }
 
   Widget _kv(String k, String v, AppClr c) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          children: [
-            SizedBox(
-                width: 72,
-                child: Text(k,
-                    style: TextStyle(color: c.textMeta, fontSize: 12))),
-            Expanded(
-                child: Text(v,
-                    style: TextStyle(
-                        color: c.textPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold))),
-          ],
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      children: [
+        SizedBox(
+          width: 72,
+          child: Text(
+            k,
+            style: TextStyle(color: c.textMeta, fontSize: AppFontSize.label),
+          ),
         ),
-      );
+        Expanded(
+          child: Text(
+            v,
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: AppFontSize.label,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 
   /// 格局断辞面板。
   Widget _buildGejuPanel(TaiyiResult r) {
@@ -487,8 +617,14 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
     return DecorativePanel(
       padding: const EdgeInsets.all(10),
       child: gejus.isEmpty
-          ? Text('本盘无显著成格，太乙文昌始击各安其位，主客从容。',
-              style: TextStyle(color: c.woodGlow, fontSize: 11, height: 1.5))
+          ? Text(
+              '本盘无显著成格，太乙文昌始击各安其位，主客从容。',
+              style: TextStyle(
+                color: c.woodGlow,
+                fontSize: AppFontSize.caption,
+                height: AppLineHeight.body,
+              ),
+            )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -501,34 +637,47 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
                         Container(
                           margin: const EdgeInsets.only(top: 1),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: c.fireGlow.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.compact,
+                            ),
                             border: Border.all(color: c.fireGlow),
                           ),
-                          child: Text('忌',
-                              style: TextStyle(
-                                  color: c.fireGlow,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold)),
+                          child: Text(
+                            '忌',
+                            style: TextStyle(
+                              color: c.fireGlow,
+                              fontSize: AppFontSize.micro,
+                              fontWeight: AppFontWeight.bold,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(g.name,
-                                  style: TextStyle(
-                                      color: c.textPrimary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold)),
+                              Text(
+                                g.name,
+                                style: TextStyle(
+                                  color: c.textPrimary,
+                                  fontSize: AppFontSize.label,
+                                  fontWeight: AppFontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text(g.text,
-                                  style: TextStyle(
-                                      color: c.textBody,
-                                      fontSize: 11,
-                                      height: 1.4)),
+                              Text(
+                                g.text,
+                                style: TextStyle(
+                                  color: c.textBody,
+                                  fontSize: AppFontSize.caption,
+                                  height: AppLineHeight.compactBody,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -549,13 +698,25 @@ class _TaiyiPageState extends ConsumerState<TaiyiPage> {
     sb.writeln('八字：${r.bazi}');
     sb.writeln('太乙积年：${r.jinian}');
     sb.writeln('遁型：${r.isYang ? "阳遁" : "阴遁"}  局数：第 ${r.ju} 局');
-    sb.writeln('太乙：${taiyiJianchen[r.taiyiJc]}${taiyiShishen[r.taiyiJc]}（${r.taiyiGong}宫）');
+    sb.writeln(
+      '太乙：${taiyiJianchen[r.taiyiJc]}${taiyiShishen[r.taiyiJc]}（${r.taiyiGong}宫）',
+    );
     sb.writeln('\n—— 主客神将 ——');
-    sb.writeln('文昌（天目）：${taiyiJianchen[r.wenchangJc]}${taiyiShishen[r.wenchangJc]}（${taiyiGongOfJianchen[r.wenchangJc]}宫）');
-    sb.writeln('始击（地目）：${taiyiJianchen[r.shijiJc]}${taiyiShishen[r.shijiJc]}（${taiyiGongOfJianchen[r.shijiJc]}宫）');
-    sb.writeln('计神：${taiyiJianchen[r.jishenJc]}${taiyiShishen[r.jishenJc]}（${taiyiGongOfJianchen[r.jishenJc]}宫）');
-    sb.writeln('主算：${r.mainSuan}  主大将：${r.mainDajiang}宫  主参将：${r.mainCanjiang}宫');
-    sb.writeln('客算：${r.guestSuan}  客大将：${r.guestDajiang}宫  客参将：${r.guestCanjiang}宫');
+    sb.writeln(
+      '文昌（天目）：${taiyiJianchen[r.wenchangJc]}${taiyiShishen[r.wenchangJc]}（${taiyiGongOfJianchen[r.wenchangJc]}宫）',
+    );
+    sb.writeln(
+      '始击（地目）：${taiyiJianchen[r.shijiJc]}${taiyiShishen[r.shijiJc]}（${taiyiGongOfJianchen[r.shijiJc]}宫）',
+    );
+    sb.writeln(
+      '计神：${taiyiJianchen[r.jishenJc]}${taiyiShishen[r.jishenJc]}（${taiyiGongOfJianchen[r.jishenJc]}宫）',
+    );
+    sb.writeln(
+      '主算：${r.mainSuan}  主大将：${r.mainDajiang}宫  主参将：${r.mainCanjiang}宫',
+    );
+    sb.writeln(
+      '客算：${r.guestSuan}  客大将：${r.guestDajiang}宫  客参将：${r.guestCanjiang}宫',
+    );
     final gejus = identifyGeju(r);
     if (gejus.isNotEmpty) {
       sb.writeln('\n—— 格局 ——');

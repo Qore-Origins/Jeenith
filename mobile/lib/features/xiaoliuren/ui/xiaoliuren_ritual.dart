@@ -97,7 +97,7 @@ class _RitualPainter extends CustomPainter {
     final bgA = _iv(0.0, 0.12);
     canvas.drawRect(
       Offset.zero & size,
-      Paint()..color = Color.fromRGBO(0x0C, 0x0A, 0x12, bgA),
+      Paint()..color = AppColors.ritualBackground.withValues(alpha: bgA),
     );
 
     // 2. 太极：0.06-0.30 缩放 + 显隐 + 旋转（先快后慢）
@@ -234,7 +234,7 @@ class _RitualPainter extends CustomPainter {
           TextStyle(
             color: AppColors.textHighlight.withValues(alpha: alpha),
             fontSize: nodeR * 0.62,
-            fontWeight: FontWeight.bold,
+            fontWeight: AppFontWeight.bold,
           ),
         );
       }
@@ -243,8 +243,8 @@ class _RitualPainter extends CustomPainter {
 
   /// 太极图（叠加法）。
   void _drawTaiji(Canvas canvas, double r, double alpha) {
-    final white = const Color.fromRGBO(238, 230, 205, 1).withValues(alpha: alpha * 0.94);
-    final black = const Color.fromRGBO(20, 16, 28, 1).withValues(alpha: alpha * 0.92);
+    final white = AppColors.ritualTaijiLight.withValues(alpha: alpha * 0.94);
+    final black = AppColors.ritualTaijiDark.withValues(alpha: alpha * 0.92);
     final rect = Rect.fromCircle(center: Offset.zero, radius: r);
     canvas.drawCircle(Offset.zero, r, Paint()..color = white);
     final half = Path()

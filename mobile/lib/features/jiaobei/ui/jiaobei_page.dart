@@ -16,6 +16,7 @@ import '../../../shared/widgets/dark_button.dart';
 import '../../../shared/widgets/entrance_item.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 
@@ -29,6 +30,7 @@ class JiaobeiPage extends ConsumerStatefulWidget {
 class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
     with SingleTickerProviderStateMixin {
   JiaoResult? _last;
+  HistoryEntry? _resultHistoryEntry;
   final List<JiaoResult> _round = []; // 本轮（默认连掷三筊为一轮）
   int _shengCount = 0; // 累计圣筊数
   bool _busy = false;
@@ -56,15 +58,15 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
     final roundData = extra['round'] as List?;
     if (lastData == null || roundData == null) return;
     JiaoResult fromMap(Map<String, dynamic> m) => JiaoResult(
-          m['p1Yang'] as bool,
-          m['p2Yang'] as bool,
-          JiaoType.values[m['type'] as int],
-        );
+      m['p1Yang'] as bool,
+      m['p2Yang'] as bool,
+      JiaoType.values[m['type'] as int],
+    );
     setState(() {
       _last = fromMap(lastData);
+      _resultHistoryEntry = restore;
       _round.clear();
-      _round.addAll(
-          roundData.map((j) => fromMap(j as Map<String, dynamic>)));
+      _round.addAll(roundData.map((j) => fromMap(j as Map<String, dynamic>)));
       _shengCount = extra['shengCount'] as int? ?? 0;
     });
   }
@@ -87,7 +89,7 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
       _last = r;
       _busy = false;
     });
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'jiaobei',
       techName: '掷筊',
@@ -97,16 +99,25 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
       extra: {
         'last': {'p1Yang': r.p1Yang, 'p2Yang': r.p2Yang, 'type': r.type.index},
         'round': _round
-            .map((j) => {'p1Yang': j.p1Yang, 'p2Yang': j.p2Yang, 'type': j.type.index})
+            .map(
+              (j) => {
+                'p1Yang': j.p1Yang,
+                'p2Yang': j.p2Yang,
+                'type': j.type.index,
+              },
+            )
             .toList(),
         'shengCount': _shengCount,
       },
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   void _onReset() {
     setState(() {
       _last = null;
+      _resultHistoryEntry = null;
       _round.clear();
       _shengCount = 0;
     });
@@ -123,12 +134,15 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
         ),
         title: Column(
           children: [
-            const Text('掷　筊', style: TextStyle(fontSize: 18)),
-            Text('杯 筊 问 事',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('掷　筊', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '杯 筊 问 事',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -154,25 +168,31 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
           const SizedBox(height: 8),
           if (_last != null)
             Center(
-              child: Text(_last!.type.name,
-                  style: TextStyle(
-                      color: _colorFor(_last!.type),
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 6)),
+              child: Text(
+                _last!.type.name,
+                style: TextStyle(
+                  color: _colorFor(_last!.type),
+                  fontSize: AppFontSize.displaySmall,
+                  fontWeight: AppFontWeight.bold,
+                  letterSpacing: AppLetterSpacing.display,
+                ),
+              ),
             ),
           const SizedBox(height: 12),
-          GoldButton(text: _busy ? '掷筊中…' : '掷筊', onPressed: _busy ? null : _onToss),
-          const SizedBox(height: 8),
-          DarkButton(
-            text: '重置本轮',
-            onPressed: _busy ? null : _onReset,
+          GoldButton(
+            text: _busy ? '掷筊中…' : '掷筊',
+            onPressed: _busy ? null : _onToss,
           ),
+          const SizedBox(height: 8),
+          DarkButton(text: '重置本轮', onPressed: _busy ? null : _onReset),
           const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
-                child: CopyResultButton(text: _buildCopyText(), enabled: _last != null),
+                child: CopyResultButton(
+                  text: _buildCopyText(),
+                  enabled: _last != null,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -188,7 +208,8 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
           RepaintBoundary(
             key: _boundaryKey,
             child: RevealAnimation(
-              enabled: ref
+              enabled:
+                  ref
                       .watch(configProvider)
                       .valueOrNull
                       ?.isAnimationEnabled('jiaobei', AnimationKind.reveal) ??
@@ -201,43 +222,69 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
                   children: [
                     Row(
                       children: [
-                        Text('本轮',
-                            style: TextStyle(
-                                color: c.textSubtitle, fontSize: 12)),
+                        Text(
+                          '本轮',
+                          style: TextStyle(
+                            color: c.textSubtitle,
+                            fontSize: AppFontSize.label,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text('${_round.length} 筊',
-                            style: TextStyle(
-                                color: c.goldBright,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold)),
+                        Text(
+                          '${_round.length} 筊',
+                          style: TextStyle(
+                            color: c.goldBright,
+                            fontSize: AppFontSize.bodySmall,
+                            fontWeight: AppFontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(width: 16),
-                        Text('圣筊',
-                            style: TextStyle(
-                                color: c.textSubtitle, fontSize: 12)),
+                        Text(
+                          '圣筊',
+                          style: TextStyle(
+                            color: c.textSubtitle,
+                            fontSize: AppFontSize.label,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        Text('$_shengCount',
-                            style: TextStyle(
-                                color: c.gradeGreat,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold)),
+                        Text(
+                          '$_shengCount',
+                          style: TextStyle(
+                            color: c.gradeGreat,
+                            fontSize: AppFontSize.bodySmall,
+                            fontWeight: AppFontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     if (_last != null)
-                      Text(_last!.type.meaning,
-                          style: TextStyle(
-                              color: c.textBody,
-                              fontSize: 12,
-                              height: 1.5)),
+                      Text(
+                        _last!.type.meaning,
+                        style: TextStyle(
+                          color: c.textBody,
+                          fontSize: AppFontSize.label,
+                          height: AppLineHeight.body,
+                        ),
+                      ),
                     const SizedBox(height: 6),
-                    Text('传统连掷三圣筊为确证。阳面为平面（凸背为阴）。',
-                        style:
-                            TextStyle(color: c.textHint, fontSize: 11)),
+                    Text(
+                      '传统连掷三圣筊为确证。阳面为平面（凸背为阴）。',
+                      style: TextStyle(
+                        color: c.textHint,
+                        fontSize: AppFontSize.caption,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -268,10 +315,8 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
         width: 86,
         height: 56,
         decoration: BoxDecoration(
-          color: showYang
-              ? c.goldLight
-              : c.resolve(const Color(0xFF6A4A2A), const Color(0xFF8A6A3A)),
-          borderRadius: BorderRadius.circular(30),
+          color: showYang ? c.goldLight : c.ritualEarthDark,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(color: c.goldBright, width: 1.5),
         ),
         alignment: Alignment.center,
@@ -280,11 +325,9 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
           style: TextStyle(
             // 阳面（亮鎏金底）：深棕文字（两模式通用）
             // 阴面（暗褐底）：浅金文字（深色）/深褐文字（浅色，与浅褐背景对比）
-            color: showYang
-                ? c.resolve(const Color(0xFF1A1208), const Color(0xFF1A1208))
-                : c.earthGlow,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            color: showYang ? AppColors.ritualDarkInk : c.earthGlow,
+            fontSize: AppFontSize.title,
+            fontWeight: AppFontWeight.bold,
           ),
         ),
       ),
@@ -292,15 +335,17 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
   }
 
   Widget _roundChip(JiaoResult r) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: _colorFor(r.type).withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _colorFor(r.type).withValues(alpha: 0.5)),
-        ),
-        child: Text(r.type.name,
-            style: TextStyle(color: _colorFor(r.type), fontSize: 12)),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: _colorFor(r.type).withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(AppRadius.small),
+      border: Border.all(color: _colorFor(r.type).withValues(alpha: 0.5)),
+    ),
+    child: Text(
+      r.type.name,
+      style: TextStyle(color: _colorFor(r.type), fontSize: AppFontSize.label),
+    ),
+  );
 
   /// 生成详细结果文本（供复制）。
   String _buildCopyText() {
@@ -308,7 +353,9 @@ class _JiaobeiPageState extends ConsumerState<JiaobeiPage>
     if (r == null) return '';
     final sb = StringBuffer('【掷筊 · 杯筊问事】\n');
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
-    sb.writeln('本次：${r.type.name}（片1${r.p1Yang ? "阳" : "阴"} 片2${r.p2Yang ? "阳" : "阴"}）');
+    sb.writeln(
+      '本次：${r.type.name}（片1${r.p1Yang ? "阳" : "阴"} 片2${r.p2Yang ? "阳" : "阴"}）',
+    );
     sb.writeln('释义：${r.type.meaning}');
     sb.writeln('\n本轮：共 ${_round.length} 筊，其中圣筊 $_shengCount');
     sb.writeln('（传统连掷三圣筊为确证）');

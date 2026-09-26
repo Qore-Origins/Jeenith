@@ -285,7 +285,7 @@ class _LuopanPainter extends CustomPainter {
               ? AppColors.goldBright
               : AppColors.textHint.withValues(alpha: appearT * 0.5),
           fontSize: _mountainFontSize,
-          fontWeight: isLit ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isLit ? AppFontWeight.bold : AppFontWeight.regular,
         ),
       );
     }
@@ -326,7 +326,7 @@ class _LuopanPainter extends CustomPainter {
       TextStyle(
         color: AppColors.goldBright.withValues(alpha: highlightT),
         fontSize: _mountainFontSize + 2,
-        fontWeight: FontWeight.bold,
+        fontWeight: AppFontWeight.bold,
       ),
     );
   }
@@ -471,9 +471,9 @@ class _LuopanPainter extends CustomPainter {
       Offset(cx, cy + R + 40),
       TextStyle(
         color: AppColors.goldBright.withValues(alpha: titleT),
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 8,
+        fontSize: AppFontSize.metric,
+        fontWeight: AppFontWeight.bold,
+        letterSpacing: AppLetterSpacing.ritual,
       ),
     );
   }

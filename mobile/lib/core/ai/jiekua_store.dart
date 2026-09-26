@@ -17,16 +17,16 @@ class JiekuaMessage {
   });
 
   Map<String, dynamic> toJson() => {
-        'role': role,
-        'content': content,
-        'time': time.toIso8601String(),
-      };
+    'role': role,
+    'content': content,
+    'time': time.toIso8601String(),
+  };
 
   factory JiekuaMessage.fromJson(Map<String, dynamic> j) => JiekuaMessage(
-        role: j['role'] as String,
-        content: j['content'] as String,
-        time: DateTime.parse(j['time'] as String),
-      );
+    role: j['role'] as String,
+    content: j['content'] as String,
+    time: DateTime.parse(j['time'] as String),
+  );
 }
 
 /// 一次解卦会话：基于某卦象的多轮对话（v3.1.0）。
@@ -62,40 +62,40 @@ class JiekuaSession {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'techName': techName,
-        'summary': summary,
-        'hexuanText': hexuanText,
-        'title': title,
-        'initialQuestion': initialQuestion,
-        'linkedHistoryEntryId': linkedHistoryEntryId,
-        'reflection': reflection,
-        'reviewedAt': reviewedAt?.toIso8601String(),
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'notes': notes,
-        'messages': messages.map((m) => m.toJson()).toList(),
-      };
+    'id': id,
+    'techName': techName,
+    'summary': summary,
+    'hexuanText': hexuanText,
+    'title': title,
+    'initialQuestion': initialQuestion,
+    'linkedHistoryEntryId': linkedHistoryEntryId,
+    'reflection': reflection,
+    'reviewedAt': reviewedAt?.toIso8601String(),
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'notes': notes,
+    'messages': messages.map((m) => m.toJson()).toList(),
+  };
 
   factory JiekuaSession.fromJson(Map<String, dynamic> j) => JiekuaSession(
-        id: j['id'] as String,
-        techName: j['techName'] as String,
-        summary: j['summary'] as String,
-        hexuanText: j['hexuanText'] as String,
-        title: j['title'] as String?,
-        initialQuestion: j['initialQuestion'] as String?,
-        linkedHistoryEntryId: j['linkedHistoryEntryId'] as String?,
-        reflection: j['reflection'] as String? ?? '',
-        reviewedAt: j['reviewedAt'] == null
-            ? null
-            : DateTime.parse(j['reviewedAt'] as String),
-        createdAt: DateTime.parse(j['createdAt'] as String),
-        updatedAt: DateTime.parse(j['updatedAt'] as String),
-        notes: j['notes'] as String? ?? '',
-        messages: ((j['messages'] as List?) ?? const [])
-            .map((m) => JiekuaMessage.fromJson(m as Map<String, dynamic>))
-            .toList(),
-      );
+    id: j['id'] as String,
+    techName: j['techName'] as String,
+    summary: j['summary'] as String,
+    hexuanText: j['hexuanText'] as String,
+    title: j['title'] as String?,
+    initialQuestion: j['initialQuestion'] as String?,
+    linkedHistoryEntryId: j['linkedHistoryEntryId'] as String?,
+    reflection: j['reflection'] as String? ?? '',
+    reviewedAt: j['reviewedAt'] == null
+        ? null
+        : DateTime.parse(j['reviewedAt'] as String),
+    createdAt: DateTime.parse(j['createdAt'] as String),
+    updatedAt: DateTime.parse(j['updatedAt'] as String),
+    notes: j['notes'] as String? ?? '',
+    messages: ((j['messages'] as List?) ?? const [])
+        .map((m) => JiekuaMessage.fromJson(m as Map<String, dynamic>))
+        .toList(),
+  );
 
   String get displayTitle {
     final savedTitle = title?.trim();
@@ -129,26 +129,25 @@ class JiekuaSession {
     List<JiekuaMessage>? messages,
     DateTime? updatedAt,
     String? notes,
-  }) =>
-      JiekuaSession(
-        id: id,
-        techName: techName ?? this.techName,
-        summary: summary ?? this.summary,
-        hexuanText: hexuanText ?? this.hexuanText,
-        title: clearTitle ? null : title ?? this.title,
-        initialQuestion: clearInitialQuestion
-            ? null
-            : initialQuestion ?? this.initialQuestion,
-        linkedHistoryEntryId: clearLinkedHistoryEntryId
-            ? null
-            : linkedHistoryEntryId ?? this.linkedHistoryEntryId,
-        reflection: reflection ?? this.reflection,
-        reviewedAt: clearReviewedAt ? null : reviewedAt ?? this.reviewedAt,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        notes: notes ?? this.notes,
-        messages: messages ?? this.messages,
-      );
+  }) => JiekuaSession(
+    id: id,
+    techName: techName ?? this.techName,
+    summary: summary ?? this.summary,
+    hexuanText: hexuanText ?? this.hexuanText,
+    title: clearTitle ? null : title ?? this.title,
+    initialQuestion: clearInitialQuestion
+        ? null
+        : initialQuestion ?? this.initialQuestion,
+    linkedHistoryEntryId: clearLinkedHistoryEntryId
+        ? null
+        : linkedHistoryEntryId ?? this.linkedHistoryEntryId,
+    reflection: reflection ?? this.reflection,
+    reviewedAt: clearReviewedAt ? null : reviewedAt ?? this.reviewedAt,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    notes: notes ?? this.notes,
+    messages: messages ?? this.messages,
+  );
 }
 
 /// 解卦会话存储（SharedPreferences JSON，原子读-改-写，仿 [HistoryStore]）。
@@ -188,28 +187,31 @@ class JiekuaStore {
 
   /// 新建或更新会话（按 id 覆盖，最新在前）。
   static Future<void> upsert(JiekuaSession s) => _serialize(() async {
-        final list = <JiekuaSession>[...await load()];
-        var found = false;
-        for (var i = 0; i < list.length; i++) {
-          if (list[i].id == s.id) {
-            list[i] = s;
-            found = true;
-            break;
-          }
-        }
-        if (!found) list.insert(0, s);
-        await _save(list);
-      });
+    final list = <JiekuaSession>[...await load()];
+    var found = false;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id == s.id) {
+        list[i] = s;
+        found = true;
+        break;
+      }
+    }
+    if (!found) list.insert(0, s);
+    list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    await _save(list);
+  });
 
   static Future<void> remove(String id) => _serialize(() async {
-        final list = <JiekuaSession>[...await load()];
-        list.removeWhere((e) => e.id == id);
-        await _save(list);
-      });
+    final list = <JiekuaSession>[...await load()];
+    list.removeWhere((e) => e.id == id);
+    await _save(list);
+  });
 
   static Future<void> _save(List<JiekuaSession> list) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        _key, jsonEncode(list.map((e) => e.toJson()).toList()));
+      _key,
+      jsonEncode(list.map((e) => e.toJson()).toList()),
+    );
   }
 }

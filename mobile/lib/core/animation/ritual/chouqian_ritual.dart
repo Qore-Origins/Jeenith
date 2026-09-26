@@ -89,14 +89,14 @@ class _ChouqianRitualPainter extends CustomPainter {
   static const double _poemFontSize = 17.0;
 
   // Scroll paper warm beige (not pure white, to avoid glare).
-  static const Color _paperColor = Color(0xFFE8D9B8);
-  static const Color _inkColor = Color(0xFF3A2E1F);
-  static const Color _stickBodyColor = Color(0xFFC9A063);
-  static const Color _stickTipColor = Color(0xFFB23A3A);
-  static const Color _paperBorder = Color(0xFFB89A5C);
-  static const Color _rollerCore = Color(0xFF6B4F1F);
-  static const Color _tubeBody = Color(0xFF2A2233);
-  static const Color _tubeInner = Color(0xFF1B1626);
+  static const Color _paperColor = AppColors.ritualPaper;
+  static const Color _inkColor = AppColors.ritualInk;
+  static const Color _stickBodyColor = AppColors.ritualStick;
+  static const Color _stickTipColor = AppColors.ritualStickTip;
+  static const Color _paperBorder = AppColors.ritualPaperBorder;
+  static const Color _rollerCore = AppColors.ritualRoller;
+  static const Color _tubeBody = AppColors.ritualTube;
+  static const Color _tubeInner = AppColors.ritualTubeInner;
 
   @override
   bool shouldRepaint(covariant _ChouqianRitualPainter old) => true;
@@ -170,12 +170,12 @@ class _ChouqianRitualPainter extends CustomPainter {
       height: _tubeH,
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect, const Radius.circular(10)),
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(AppRadius.control)),
       Paint()..color = _tubeBody.withValues(alpha: alpha),
     );
     // Inner shading.
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect.deflate(4), const Radius.circular(7)),
+      RRect.fromRectAndRadius(bodyRect.deflate(4), const Radius.circular(AppRadius.compactLoose)),
       Paint()..color = _tubeInner.withValues(alpha: alpha * 0.8),
     );
 
@@ -247,7 +247,7 @@ class _ChouqianRitualPainter extends CustomPainter {
       height: _stickH,
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(bodyRect, const Radius.circular(4)),
+      RRect.fromRectAndRadius(bodyRect, const Radius.circular(AppRadius.compact)),
       Paint()..color = _stickBodyColor.withValues(alpha: alpha),
     );
     // Red tip (top of the stick).
@@ -258,7 +258,7 @@ class _ChouqianRitualPainter extends CustomPainter {
           width: _stickW,
           height: 14,
         ),
-        const Radius.circular(3),
+        const Radius.circular(AppRadius.tiny),
       ),
       Paint()..color = _stickTipColor.withValues(alpha: alpha),
     );
@@ -357,8 +357,8 @@ class _ChouqianRitualPainter extends CustomPainter {
           style: const TextStyle(
             color: _inkColor,
             fontSize: _poemFontSize,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 2,
+            fontWeight: AppFontWeight.medium,
+            letterSpacing: AppLetterSpacing.label,
           ),
         ),
         textAlign: TextAlign.center,
@@ -435,9 +435,9 @@ class _ChouqianRitualPainter extends CustomPainter {
         Offset(cx, cy + halfH + 36),
         TextStyle(
           color: AppColors.goldBright.withValues(alpha: titleT),
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 8,
+          fontSize: AppFontSize.metric,
+          fontWeight: AppFontWeight.bold,
+          letterSpacing: AppLetterSpacing.ritual,
         ),
       );
     }

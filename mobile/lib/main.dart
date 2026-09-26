@@ -59,6 +59,8 @@ Future<void> main() async {
         math.min(targetHeight, _kMinimumWindowHeight).toDouble(),
       ),
       center: true,
+      titleBarStyle: PlatformInfo.isWindows ? TitleBarStyle.hidden : null,
+      windowButtonVisibility: PlatformInfo.isWindows ? false : null,
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions, () async {

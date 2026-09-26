@@ -54,7 +54,9 @@ class ShareResultButton extends StatelessWidget {
       }
       final isLight = Theme.of(context).brightness == Brightness.light;
       final composed = await _composeWithBackground(raw, isLight: isLight);
-      final byteData = await composed.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await composed.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       if (byteData == null) {
         _fallbackShare();
         return;
@@ -71,8 +73,10 @@ class ShareResultButton extends StatelessWidget {
   }
 
   /// 在截图上合成主题背景渐变 + 鎏金细边。
-  Future<ui.Image> _composeWithBackground(ui.Image raw,
-      {required bool isLight}) async {
+  Future<ui.Image> _composeWithBackground(
+    ui.Image raw, {
+    required bool isLight,
+  }) async {
     final w = raw.width;
     final h = raw.height;
     final recorder = ui.PictureRecorder();
@@ -107,15 +111,17 @@ class ShareResultButton extends StatelessWidget {
         text: '志极 Jeenith · 叩问本心',
         style: TextStyle(
           color: goldColor.withValues(alpha: 0.85),
-          fontSize: w.toDouble() * 0.022,
-          fontFamily: 'SourceHanSerif',
-          letterSpacing: w.toDouble() * 0.004,
+          fontSize: AppFontSize.shareBranding(w.toDouble()),
+          fontFamily: AppFonts.serif,
+          letterSpacing: AppLetterSpacing.shareBranding(w.toDouble()),
         ),
       ),
       textDirection: ui.TextDirection.ltr,
     )..layout();
-    tp.paint(canvas,
-        Offset((w - tp.width) / 2, h - tp.height - w.toDouble() * 0.028));
+    tp.paint(
+      canvas,
+      Offset((w - tp.width) / 2, h - tp.height - w.toDouble() * 0.028),
+    );
     tp.dispose();
 
     final picture = recorder.endRecording();

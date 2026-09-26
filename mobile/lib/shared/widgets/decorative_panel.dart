@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
-/// 金边半透明深底面板容器。
+/// Shared surface panel with a restrained copper outline.
 class DecorativePanel extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
   const DecorativePanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(AppSpacing.large),
   });
 
   @override
@@ -18,14 +18,7 @@ class DecorativePanel extends StatelessWidget {
     final c = AppClr.of(context);
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: c.panel,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: c.resolve(
-                const Color.fromRGBO(212, 168, 87, 0.24),
-                const Color.fromRGBO(155, 122, 42, 0.30))),
-      ),
+      decoration: AppSurfaceStyles.panel(c),
       padding: padding,
       child: child,
     );

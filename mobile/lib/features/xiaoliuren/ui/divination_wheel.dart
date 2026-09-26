@@ -174,7 +174,7 @@ class _WheelPainter extends CustomPainter {
     // —— 背景径向渐变（深色：紫黑；浅色：浅米，随主题切换）——
     final bgRect = Rect.fromCircle(center: Offset(cx, cy), radius: math.max(w, h) * 0.7);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(24)),
+      RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(AppRadius.large)),
       Paint()
         ..shader = RadialGradient(colors: [
           c.bgInner, c.bgMid, c.bgOuter,
@@ -230,7 +230,7 @@ class _WheelPainter extends CustomPainter {
       final radius = R * 0.34 + R * 1.3 * p;
       final alpha = (1 - p) * 0.7;
       // 深色用亮米白 0xFFFFF0C0；浅色用 gold 0xFFD4A857 以保证可见
-      final igniteHot = c.resolve(const Color(0xFFFFF0C0), AppColors.gold);
+      final igniteHot = c.sparkIgnite;
       canvas.drawCircle(
         Offset(cx, cy),
         radius,
@@ -304,7 +304,7 @@ class _WheelPainter extends CustomPainter {
         TextStyle(
           color: isLit ? c.textHighlight : c.textPrimary,
           fontSize: r * 0.46,
-          fontWeight: FontWeight.bold,
+          fontWeight: AppFontWeight.bold,
         ),
       );
       _drawText(
@@ -330,7 +330,7 @@ class _WheelPainter extends CustomPainter {
       final ang = -math.pi / 2 + (2 * math.pi / 6) * s.cursor;
       final cpos = Offset(cx + R * math.cos(ang), cy + R * math.sin(ang));
       // 深色用 0xFFFFE6A0 亮黄；浅色用 gold 0xFFD4A857
-      final cursorHot = c.resolve(const Color(0xFFFFE6A0), AppColors.gold);
+      final cursorHot = c.sparkCursor;
       canvas.drawCircle(
         Offset(cx, cy),
         4,
@@ -340,10 +340,7 @@ class _WheelPainter extends CustomPainter {
         Offset(cx, cy),
         cpos,
         Paint()
-          ..color = c.resolve(
-            const Color.fromRGBO(255, 215, 130, 0.55),
-            AppColors.gold.withValues(alpha: 0.55),
-          )
+          ..color = clr.sparkTrail.withValues(alpha: 0.55)
           ..strokeWidth = 2,
       );
       canvas.drawCircle(cpos, 5, Paint()..color = cursorHot);
@@ -357,7 +354,7 @@ class _WheelPainter extends CustomPainter {
     const fadeBand = 0.32; // 消失前沿过渡宽度
     final globalFade = 1 - age * 0.3;
     // 深色用 0xFFFFD782 暖黄；浅色用 gold
-    final trailHot = clr.resolve(const Color(0xFFFFD782), AppColors.gold);
+    final trailHot = clr.sparkTrail;
     for (var k = 0; k < segs; k++) {
       final tm = (k + 0.5) / segs; // 段中点：0=圆心端，1=宫位端
       final a = ((tm - (age - fadeBand)) / fadeBand).clamp(0.0, 1.0) *
@@ -394,14 +391,8 @@ class _WheelPainter extends CustomPainter {
     canvas.rotate(s.pulse * 0.6 * math.pi / 180);
 
     // 太极两色：深色用浅米白 + 紫黑；浅色用深鎏金 + 深棕（保证与浅色背景对比）
-    final white = clr.resolve(
-      const Color.fromRGBO(238, 230, 205, 0.94),
-      const Color.fromRGBO(155, 122, 42, 0.94),
-    );
-    final black = clr.resolve(
-      const Color.fromRGBO(20, 16, 28, 0.92),
-      const Color.fromRGBO(26, 18, 8, 0.92),
-    );
+    final white = clr.ritualTaijiLight.withValues(alpha: 0.94);
+    final black = clr.ritualTaijiDark.withValues(alpha: 0.92);
     final rect = Rect.fromCircle(center: Offset.zero, radius: r);
 
     // 整圆白底

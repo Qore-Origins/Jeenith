@@ -8,7 +8,9 @@ param(
     [ValidateSet("release", "beta", "alpha", "rc", "fix", "hotfix", "feature", "dev", "debug")]
     [string]$Status = "release",
 
-    [string]$TargetVersion
+    [string]$TargetVersion,
+
+    [switch]$NoPub
 )
 
 $ErrorActionPreference = "Stop"
@@ -97,11 +99,11 @@ $Version = $vi.Version; $BuildNumber = $vi.BuildNumber
 $buildDate = Get-BuildDate
 $apkOutputDir = Join-Path $projectRoot "build\app\outputs\flutter-apk"
 
-# builds/ 在仓库根（与 mobile/ 平级，符合 FLUTTER_APK_BUILD_PIPELINE 规范）
-$buildsDir = Join-Path $projectRoot "..\builds"
+# 正式发布产物统一归档到仓库根的 builds/release/。
+$buildsDir = Join-Path $projectRoot "..\builds\release"
 if (-not (Test-Path $buildsDir)) { New-Item -ItemType Directory -Path $buildsDir | Out-Null }
 
-# APK 按平台分类归档到 builds/android/（Windows zip 手动归档到 builds/windows/）
+# APK 按平台分类归档到 builds/release/android/（Windows zip 归档到 release/windows/）
 $androidDir = Join-Path $buildsDir "android"
 if (-not (Test-Path $androidDir)) { New-Item -ItemType Directory -Path $androidDir | Out-Null }
 
@@ -123,7 +125,9 @@ $buildSequence = Get-BuildSequence -buildsDir $androidDir -buildDate $buildDate 
 
 Write-Host "Building..." -ForegroundColor Green
 Set-Location $projectRoot
-& flutter build apk --$BuildType
+$flutterBuildArgs = @("build", "apk", "--$BuildType")
+if ($NoPub) { $flutterBuildArgs += "--no-pub" }
+& flutter @flutterBuildArgs
 if ($LASTEXITCODE -ne 0) {
     Update-VersionInPubspec -pubspecPath $pubspecPath -newVersion $Version -newBuildNumber $BuildNumber
     Write-Error "Build failed! Version rolled back to $Version+$BuildNumber"; exit 1
@@ -139,7 +143,7 @@ if (Rename-APK -apkPath $apkFile -status $Status -version $releaseVersion -build
     $newApkPath = Join-Path $apkOutputDir $newApkName
     $buildsApkPath = Join-Path $androidDir $newApkName
     Copy-Item -Path $newApkPath -Destination $buildsApkPath -Force
-    Write-Host "[ARCHIVE] Copied to builds: $newApkName" -ForegroundColor Green
+    Write-Host "[ARCHIVE] Copied to builds/release/android: $newApkName" -ForegroundColor Green
 
     # 追加双份 build_history.json
     $archiver = Join-Path $scriptPath "archive_history.py"

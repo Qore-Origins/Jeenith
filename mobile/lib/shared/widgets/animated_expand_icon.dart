@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/config_providers.dart';
 import '../../core/theme/animations.dart';
+import '../../core/theme/app_theme.dart';
 
 /// 图标状态切换动画（+ ↔ x / + ↔ -）。
 ///
@@ -81,9 +82,8 @@ class _AnimatedExpandIconState extends ConsumerState<AnimatedExpandIcon>
     _animEnabled =
         ref.watch(configProvider).valueOrNull?.animationsEnabled ?? true;
 
-    final iconColor = widget.color ??
-        IconTheme.of(context).color ??
-        const Color(0xFFD4A857);
+    final iconColor =
+        widget.color ?? IconTheme.of(context).color ?? AppClr.of(context).gold;
 
     final baseIcon = Icon(
       widget.collapsedIcon,
@@ -95,10 +95,7 @@ class _AnimatedExpandIconState extends ConsumerState<AnimatedExpandIcon>
       return GestureDetector(
         onTap: widget.onPressed == null ? null : _handleTap,
         behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: baseIcon,
-        ),
+        child: Padding(padding: const EdgeInsets.all(8), child: baseIcon),
       );
     }
 
@@ -116,10 +113,7 @@ class _AnimatedExpandIconState extends ConsumerState<AnimatedExpandIcon>
               turns: widget.expanded ? widget.expandedAngle / 360 : 0,
               duration: const Duration(milliseconds: AppAnimations.iconRotate),
               curve: AppAnimations.iconRotateCurve,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: baseIcon,
-              ),
+              child: Padding(padding: const EdgeInsets.all(8), child: baseIcon),
             ),
           );
         },

@@ -6,16 +6,18 @@ import '../../core/config/config_providers.dart';
 import '../../core/theme/animations.dart';
 import '../../core/theme/app_theme.dart';
 
-/// 深色次要按钮，可选前置图标（接受任意 Widget：[Icon] / [SvgIcon] / [Image]）。
+/// Secondary surface button with an optional leading icon.
 ///
 /// v2.0.0 升级：与 [GoldButton] 同款按动 0.95 缩放 + 阴影变化 + 抬起 easeOutBack 弹回。
-/// **v2.10.4 主题感知**：颜色全部从 [AppClr.of] 取，深色沿用紫黑渐变 + 浅金字，
-/// 浅色切换为浅米渐变 + 深棕字（与设置页配色一致），补齐 v2.10.0 浅色适配遗漏。
+/// The historical class name is retained for call-site compatibility; both
+/// themes use the shared surface and text colors instead of the previous purple
+/// gradient.
 ///
 /// 内部自动读 [AppConfig.animationsEnabled]，开关关闭时降级为静态按钮。
 class DarkButton extends ConsumerStatefulWidget {
   final String text;
   final Widget? icon;
+
   /// 自定义文字内容（优先于 [text]，自动套用按钮标签样式）。用于需要文字
   /// 过渡动画的场景（如 CopyResultButton「复制结果」→「已复制」切换）。
   final Widget? label;
@@ -28,7 +30,7 @@ class DarkButton extends ConsumerStatefulWidget {
     this.icon,
     this.label,
     this.onPressed,
-    this.radius = 10,
+    this.radius = AppRadius.button,
   });
 
   @override
@@ -90,21 +92,13 @@ class _DarkButtonState extends ConsumerState<DarkButton>
     final enabled = widget.onPressed != null;
     final animEnabled = _animEnabled;
     final c = AppClr.of(context);
-    // 主题感知：深色沿用紫黑渐变 + 浅金字；浅色用浅米渐变 + 深棕字（与设置页一致）
-    final labelColor =
-        c.resolve(const Color(0xFFF0E6CF), const Color(0xFF2E2210));
-    final gradTop = enabled
-        ? c.resolve(const Color(0xFF3A2F4A), AppColorsLight.buttonTop)
-        : c.resolve(const Color(0xFF2A2235), const Color(0xFFD9CBA8));
-    final gradBottom = enabled
-        ? c.resolve(const Color(0xFF241C30), AppColorsLight.buttonBottom)
-        : c.resolve(const Color(0xFF1A1525), const Color(0xFFC9BB98));
-    final borderColor =
-        enabled ? c.goldBorder : c.goldBorder.withValues(alpha: 0.18);
-    final labelStyle = TextStyle(
+    final labelColor = enabled ? c.textBody : c.textHint;
+    final buttonColor = enabled ? c.buttonTop : c.panel;
+    final borderColor = enabled
+        ? c.goldBorder
+        : c.goldBorder.withValues(alpha: 0.45);
+    final labelStyle = context.appTypography.secondaryButton.copyWith(
       color: labelColor,
-      fontSize: 13,
-      fontWeight: FontWeight.bold,
     );
     final label = widget.label != null
         ? DefaultTextStyle(style: labelStyle, child: widget.label!)
@@ -125,33 +119,32 @@ class _DarkButtonState extends ConsumerState<DarkButton>
 
     final box = DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [gradTop, gradBottom],
-        ),
+        color: buttonColor,
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: borderColor),
         boxShadow: _down
             ? [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
-                  blurRadius: 4,
+                  color: AppColors.shadow.withValues(alpha: 0.06),
+                  blurRadius: 3,
                   offset: const Offset(0, 1),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.28),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
+                  color: AppColors.shadow.withValues(alpha: 0.06),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
                 ),
               ],
       ),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        child: innerContent),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.buttonSecondaryHorizontal,
+          vertical: AppSpacing.buttonSecondaryVertical,
+        ),
+        child: innerContent,
+      ),
     );
 
     final inner = animEnabled
@@ -161,7 +154,9 @@ class _DarkButtonState extends ConsumerState<DarkButton>
               final t = _press.value;
               final downCurve = AppAnimations.pressDownCurve.transform(t);
               final upCurve = AppAnimations.pressReleaseCurve.transform(1 - t);
-              final scale = _down ? 1.0 - 0.05 * downCurve : 0.95 + 0.05 * upCurve;
+              final scale = _down
+                  ? 1.0 - 0.05 * downCurve
+                  : 0.95 + 0.05 * upCurve;
               return Transform.scale(
                 scale: scale,
                 alignment: Alignment.center,

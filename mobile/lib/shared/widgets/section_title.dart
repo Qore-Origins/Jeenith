@@ -9,13 +9,13 @@ class SectionTitle extends StatelessWidget {
   const SectionTitle(this.text, {super.key, this.color});
 
   @override
-  Widget build(BuildContext context) => Text(
-        '◆ $text',
-        style: TextStyle(
-          color: color ?? AppClr.of(context).gold,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 2,
-        ),
-      );
+  Widget build(BuildContext context) {
+    final typography = context.appTypography;
+    return Text(
+      '◆ $text',
+      style: typography.sectionTitle.copyWith(
+        color: color ?? typography.colors.gold,
+      ),
+    );
+  }
 }

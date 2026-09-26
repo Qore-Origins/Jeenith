@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Qore
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -71,9 +71,9 @@ class _ChengguRitualState extends RitualAnimationState<ChengguRitual> {
                   child: Text('称 骨 算 命',
                       style: TextStyle(
                           color: AppColors.goldBright,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 12)),
+                          fontSize: AppFontSize.heading,
+                          fontWeight: AppFontWeight.bold,
+                          letterSpacing: AppLetterSpacing.ritualDisplay)),
                 );
               },
             ),

@@ -80,13 +80,13 @@ class _ProfileDivinationPageState
               Text('「${p.name}」时辰未知',
                   style: TextStyle(
                       color: c.fireGlow,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
+                      fontSize: AppFontSize.bodyLarge,
+                      fontWeight: AppFontWeight.bold)),
               const SizedBox(height: 8),
               Text(
                   '紫微斗数、八字推演、称骨算命 均需时辰方可推演。\n请返回档案补全时辰后再卜算。',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: c.textBody, fontSize: 13, height: 1.6)),
+                  style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.reading)),
               const SizedBox(height: 20),
               GoldButton(
                   text: '返回档案补全',
@@ -129,10 +129,10 @@ class _ProfileDivinationPageState
                     Text(p.name,
                         style: TextStyle(
                             color: c.goldBright,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
+                            fontSize: AppFontSize.bodyLarge,
+                            fontWeight: AppFontWeight.bold)),
                     Text('${p.birthDisplay} · ${p.isMale ? "男" : "女"}',
-                        style: TextStyle(color: c.textBody, fontSize: 12)),
+                        style: TextStyle(color: c.textBody, fontSize: AppFontSize.label)),
                   ],
                 ),
               ),
@@ -161,10 +161,10 @@ class _ProfileDivinationPageState
           _row(c, '命格', cr.fate.title),
           const SizedBox(height: 8),
           Text(cr.fate.poem,
-              style: TextStyle(color: c.gold, fontSize: 12, height: 1.7)),
+              style: TextStyle(color: c.gold, fontSize: AppFontSize.label, height: AppLineHeight.spacious)),
           const SizedBox(height: 6),
           Text(fateText,
-              style: TextStyle(color: c.textBody, fontSize: 12, height: 1.6)),
+              style: TextStyle(color: c.textBody, fontSize: AppFontSize.label, height: AppLineHeight.reading)),
         ]),
       ],
     );
@@ -175,9 +175,9 @@ class _ProfileDivinationPageState
         child: Text(t,
             style: TextStyle(
                 color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: AppFontWeight.bold,
+                letterSpacing: AppLetterSpacing.label)),
       );
 
   Widget _card(AppClr c, List<Widget> children) => DecorativePanel(
@@ -194,10 +194,10 @@ class _ProfileDivinationPageState
             SizedBox(
                 width: 72,
                 child: Text(label,
-                    style: TextStyle(color: c.textSubtitle, fontSize: 12))),
+                    style: TextStyle(color: c.textSubtitle, fontSize: AppFontSize.label))),
             Expanded(
                 child: Text(value,
-                    style: TextStyle(color: c.textPrimary, fontSize: 13))),
+                    style: TextStyle(color: c.textPrimary, fontSize: AppFontSize.bodySmall))),
           ],
         ),
       );

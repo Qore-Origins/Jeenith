@@ -7,8 +7,13 @@ import '../../core/theme/app_theme.dart';
 /// Persistent desktop navigation for every top-level route.
 class AppDesktopNavigation extends StatelessWidget {
   final GoRouter router;
+  final bool showBrand;
 
-  const AppDesktopNavigation({super.key, required this.router});
+  const AppDesktopNavigation({
+    super.key,
+    required this.router,
+    this.showBrand = true,
+  });
 
   static const double width = 224;
 
@@ -22,6 +27,7 @@ class AppDesktopNavigation extends StatelessWidget {
 
   Widget _buildNavigation(BuildContext context, String currentPath) {
     final c = AppClr.of(context);
+    final typography = context.appTypography;
     final activeBranch = _activeBranch(currentPath);
     final border = BorderSide(color: c.goldBorder.withValues(alpha: 0.45));
 
@@ -38,13 +44,18 @@ class AppDesktopNavigation extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _brand(c),
-                const SizedBox(height: 28),
-                _sectionLabel(c, '工作台'),
+                if (showBrand) _brand(c, typography),
+                SizedBox(
+                  height: showBrand
+                      ? AppSpacing.xxLarge
+                      : AppSpacing.xxLarge + AppWindowChrome.height,
+                ),
+                _sectionLabel(typography, '工作台'),
                 const SizedBox(height: 8),
                 for (final item in _mainItems)
                   _navigationItem(
                     c,
+                    typography,
                     item.label,
                     item.icon,
                     item.path,
@@ -53,17 +64,20 @@ class AppDesktopNavigation extends StatelessWidget {
                 const Spacer(),
                 Divider(color: c.goldBorder.withValues(alpha: 0.45)),
                 const SizedBox(height: 10),
-                _sectionLabel(c, '资料与设置'),
+                _sectionLabel(typography, '资料与设置'),
                 const SizedBox(height: 8),
                 for (final item in _utilityItems)
-                  _navigationItem(c, item.label, item.icon, item.path),
+                  _navigationItem(
+                    c,
+                    typography,
+                    item.label,
+                    item.icon,
+                    item.path,
+                  ),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    '志极 Jeenith',
-                    style: TextStyle(color: c.textHint, fontSize: 11),
-                  ),
+                  child: Text('志极 Jeenith', style: typography.navigationFooter),
                 ),
               ],
             ),
@@ -73,14 +87,14 @@ class AppDesktopNavigation extends StatelessWidget {
     );
   }
 
-  Widget _brand(AppClr c) => Row(
+  Widget _brand(AppClr c, AppTypography typography) => Row(
     children: [
       Container(
         width: 38,
         height: 38,
         decoration: BoxDecoration(
           color: c.jade.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.button),
           border: Border.all(color: c.jade.withValues(alpha: 0.28)),
         ),
         child: Icon(Icons.explore_outlined, color: c.jade, size: 21),
@@ -89,44 +103,24 @@ class AppDesktopNavigation extends StatelessWidget {
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '志极',
-            style: TextStyle(
-              color: c.textPrimary,
-              fontFamily: AppFonts.serif,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
+          Text('志极', style: typography.brand),
           Text(
             'JEENITH',
-            style: TextStyle(
-              color: c.textMeta,
-              fontSize: 9,
-              letterSpacing: 2.2,
-            ),
+            style: typography.brandCaption.copyWith(color: c.textMeta),
           ),
         ],
       ),
     ],
   );
 
-  Widget _sectionLabel(AppClr c, String text) => Padding(
+  Widget _sectionLabel(AppTypography typography, String text) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 12),
-    child: Text(
-      text,
-      style: TextStyle(
-        color: c.textHint,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 1.2,
-      ),
-    ),
+    child: Text(text, style: typography.navigationGroup),
   );
 
   Widget _navigationItem(
     AppClr c,
+    AppTypography typography,
     String label,
     IconData icon,
     String path, {
@@ -140,9 +134,9 @@ class AppDesktopNavigation extends StatelessWidget {
         selected: selected,
         label: label,
         child: Material(
-          color: Colors.transparent,
+          color: AppColors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.button),
             hoverColor: c.jade.withValues(alpha: 0.07),
             focusColor: c.jade.withValues(alpha: 0.12),
             onTap: () => router.go(path),
@@ -152,12 +146,12 @@ class AppDesktopNavigation extends StatelessWidget {
               decoration: BoxDecoration(
                 color: selected
                     ? c.jade.withValues(alpha: 0.12)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                    : AppColors.transparent,
+                borderRadius: BorderRadius.circular(AppRadius.button),
                 border: Border.all(
                   color: selected
                       ? c.jade.withValues(alpha: 0.30)
-                      : Colors.transparent,
+                      : AppColors.transparent,
                 ),
               ),
               child: Row(
@@ -168,13 +162,9 @@ class AppDesktopNavigation extends StatelessWidget {
                     child: Text(
                       label,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: selected ? c.textPrimary : c.textSubtitle,
-                        fontSize: 13,
-                        fontWeight: selected
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                      ),
+                      style: selected
+                          ? typography.navigationSelectedLabel
+                          : typography.navigationLabel,
                     ),
                   ),
                 ],

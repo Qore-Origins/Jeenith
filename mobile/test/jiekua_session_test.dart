@@ -43,9 +43,15 @@ void main() {
 
       expect(session.toJson(), containsPair('title', '职业选择'));
       expect(session.toJson(), containsPair('initialQuestion', '我该如何选择职业方向？'));
-      expect(session.toJson(), containsPair('linkedHistoryEntryId', 'history-17'));
+      expect(
+        session.toJson(),
+        containsPair('linkedHistoryEntryId', 'history-17'),
+      );
       expect(session.toJson(), containsPair('reflection', '一个月后回看'));
-      expect(session.toJson(), containsPair('reviewedAt', '2026-10-26T00:00:00.000Z'));
+      expect(
+        session.toJson(),
+        containsPair('reviewedAt', '2026-10-26T00:00:00.000Z'),
+      );
       expect(decoded.title, '职业选择');
       expect(decoded.initialQuestion, '我该如何选择职业方向？');
       expect(decoded.linkedHistoryEntryId, 'history-17');
@@ -84,32 +90,35 @@ void main() {
       expect(cleared.reflection, isEmpty);
     });
 
-    test('uses question, first user message, then technique summary for title', () {
-      final base = JiekuaSession(
-        id: 'title-fallback',
-        techName: '周易',
-        summary: '乾为天',
-        hexuanText: '',
-        createdAt: DateTime.utc(2026, 9, 26),
-        updatedAt: DateTime.utc(2026, 9, 26),
-        messages: [
-          JiekuaMessage(
-            role: 'assistant',
-            content: '欢迎',
-            time: DateTime.utc(2026, 9, 26),
-          ),
-          JiekuaMessage(
-            role: 'user',
-            content: '  如何开始？  ',
-            time: DateTime.utc(2026, 9, 26),
-          ),
-        ],
-      );
+    test(
+      'uses question, first user message, then technique summary for title',
+      () {
+        final base = JiekuaSession(
+          id: 'title-fallback',
+          techName: '周易',
+          summary: '乾为天',
+          hexuanText: '',
+          createdAt: DateTime.utc(2026, 9, 26),
+          updatedAt: DateTime.utc(2026, 9, 26),
+          messages: [
+            JiekuaMessage(
+              role: 'assistant',
+              content: '欢迎',
+              time: DateTime.utc(2026, 9, 26),
+            ),
+            JiekuaMessage(
+              role: 'user',
+              content: '  如何开始？  ',
+              time: DateTime.utc(2026, 9, 26),
+            ),
+          ],
+        );
 
-      expect(base.displayTitle, '如何开始？');
-      expect(base.copyWith(messages: const []).displayTitle, '周易 · 乾为天');
-      expect(base.copyWith(initialQuestion: '最初的问题').displayTitle, '最初的问题');
-    });
+        expect(base.displayTitle, '如何开始？');
+        expect(base.copyWith(messages: const []).displayTitle, '周易 · 乾为天');
+        expect(base.copyWith(initialQuestion: '最初的问题').displayTitle, '最初的问题');
+      },
+    );
 
     test('persists notes through JSON and copyWith', () {
       final session = JiekuaSession(

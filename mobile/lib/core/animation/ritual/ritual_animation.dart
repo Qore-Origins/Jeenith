@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Qore
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 
 import '../../theme/animations.dart';
 import '../../theme/app_theme.dart';
@@ -97,7 +97,7 @@ class _SkipButtonState extends State<_SkipButton>
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
           decoration: BoxDecoration(
             color: AppColors.gold.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppRadius.dialogLarge),
             border: Border.all(color: AppColors.gold.withValues(alpha: 0.38)),
           ),
           child: Row(
@@ -107,8 +107,8 @@ class _SkipButtonState extends State<_SkipButton>
                 '跳过',
                 style: TextStyle(
                   color: AppColors.gold.withValues(alpha: 0.82),
-                  fontSize: 13,
-                  letterSpacing: 4,
+                  fontSize: AppFontSize.bodySmall,
+                  letterSpacing: AppLetterSpacing.decorative,
                 ),
               ),
               const SizedBox(width: 4),

@@ -277,13 +277,13 @@ class _QimenPainter extends CustomPainter {
 
     _drawText(canvas, '值符', fPos, TextStyle(
       color: AppColors.goldBright.withValues(alpha: alpha),
-      fontSize: 14 * scale,
-      fontWeight: FontWeight.bold,
+      fontSize: AppFontSize.body * scale,
+      fontWeight: AppFontWeight.bold,
     ));
     _drawText(canvas, '值使', sPos, TextStyle(
       color: AppColors.goldBright.withValues(alpha: alpha),
-      fontSize: 14 * scale,
-      fontWeight: FontWeight.bold,
+      fontSize: AppFontSize.body * scale,
+      fontWeight: AppFontWeight.bold,
     ));
   }
 
@@ -325,8 +325,8 @@ class _QimenPainter extends CustomPainter {
 
     _drawText(canvas, _doors[doorIdx], pos, TextStyle(
       color: AppColors.goldBright.withValues(alpha: alpha),
-      fontSize: 14,
-      fontWeight: FontWeight.bold,
+      fontSize: AppFontSize.body,
+      fontWeight: AppFontWeight.bold,
     ));
   }
 
@@ -369,7 +369,7 @@ class _QimenPainter extends CustomPainter {
     _drawText(canvas, _stars[starIdx], pos + const Offset(0, dotRadius + 8),
       TextStyle(
         color: AppColors.textBody.withValues(alpha: alpha),
-        fontSize: 10,
+        fontSize: AppFontSize.micro,
       ),
     );
   }
@@ -392,7 +392,7 @@ class _QimenPainter extends CustomPainter {
 
     _drawText(canvas, _gods[godIdx], pos, TextStyle(
       color: AppColors.textSubtitle.withValues(alpha: alpha * 0.85),
-      fontSize: 9,
+      fontSize: AppFontSize.footnote,
     ));
   }
 
@@ -430,9 +430,9 @@ class _QimenPainter extends CustomPainter {
     final titleY = gridTop - cellSize * 0.9;
     _drawText(canvas, '奇门遁甲', Offset(size.width / 2, titleY), TextStyle(
       color: AppColors.goldBright.withValues(alpha: alpha),
-      fontSize: 22,
-      fontWeight: FontWeight.bold,
-      letterSpacing: 8,
+      fontSize: AppFontSize.metric,
+      fontWeight: AppFontWeight.bold,
+      letterSpacing: AppLetterSpacing.ritual,
     ));
   }
 

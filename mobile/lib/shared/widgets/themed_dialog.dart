@@ -69,7 +69,7 @@ class _ThemedDialogState extends State<ThemedDialog>
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 4 * blurT, sigmaY: 4 * blurT),
           child: Container(
-            color: Colors.black.withValues(alpha: 0.38 * blurT),
+            color: AppColors.shadow.withValues(alpha: 0.38 * blurT),
             child: Center(
               child: Opacity(
                 opacity: _enter.value.clamp(0.0, 1.0),
@@ -80,11 +80,11 @@ class _ThemedDialogState extends State<ThemedDialog>
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: c.card,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
                       border: Border.all(color: c.goldBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.45),
+                          color: AppColors.shadow.withValues(alpha: 0.45),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -111,15 +111,15 @@ class _ThemedDialogState extends State<ThemedDialog>
                                       height: 18,
                                       decoration: BoxDecoration(
                                         color: c.goldBright,
-                                        borderRadius: BorderRadius.circular(2),
+                                        borderRadius: BorderRadius.circular(AppRadius.hairline),
                                       )),
                                   const SizedBox(width: 8),
                                   Text(widget.title,
                                       style: TextStyle(
                                           color: c.goldBright,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 2)),
+                                          fontSize: AppFontSize.bodyLarge,
+                                          fontWeight: AppFontWeight.bold,
+                                          letterSpacing: AppLetterSpacing.label)),
                                 ],
                               ),
                             ),

@@ -15,6 +15,7 @@ import '../../../core/history/history_providers.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 import '../data/chenggu_data.dart';
@@ -32,6 +33,7 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
   final _hour = TextEditingController();
   bool _isMale = true;
   ChengguResult? _r;
+  HistoryEntry? _resultHistoryEntry;
   final GlobalKey _boundaryKey = GlobalKey();
 
   @override
@@ -51,7 +53,9 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
     final m = extra['month'] as int?;
     final d = extra['day'] as int?;
     final h = extra['hour'] as int?;
-    if (y == null || m == null || d == null || h == null || h < 0 || h > 23) return;
+    if (y == null || m == null || d == null || h == null || h < 0 || h > 23) {
+      return;
+    }
     final male = extra['isMale'] as bool? ?? true;
     setState(() {
       _isMale = male;
@@ -60,6 +64,7 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
       _day.text = d.toString();
       _hour.text = h.toString();
       _r = divine(y, m, d, h);
+      _resultHistoryEntry = restore;
     });
   }
 
@@ -79,12 +84,13 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
     final berr = validateBirth(y, m, d, h);
     if (berr != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating));
+        SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating),
+      );
       return;
     }
     setState(() => _r = divine(y, m, d, h));
     FocusScope.of(context).unfocus();
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'chenggu',
       techName: '称骨算命',
@@ -92,7 +98,9 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
       summary: _r == null ? '' : _r!.weightLabel,
       detail: _buildCopyText(),
       extra: {'year': y, 'month': m, 'day': d, 'hour': h, 'isMale': _isMale},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   /// v2.4.0: 一键填充当前公历时辰。
@@ -118,10 +126,15 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
         ),
         title: Column(
           children: [
-            const Text('称骨算命', style: TextStyle(fontSize: 18)),
-            Text('袁 天 罡 称 骨',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('称骨算命', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '袁 天 罡 称 骨',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -133,8 +146,13 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('公历生辰（年 月 日 时 0-23）',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '公历生辰（年 月 日 时 0-23）',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -150,8 +168,13 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text('性别',
-                        style: TextStyle(color: c.textBody, fontSize: 12)),
+                    Text(
+                      '性别',
+                      style: TextStyle(
+                        color: c.textBody,
+                        fontSize: AppFontSize.label,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     _genderChip('男', true),
                     const SizedBox(width: 6),
@@ -164,12 +187,16 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
                   child: TextButton.icon(
                     onPressed: _fillNow,
                     icon: const Icon(Icons.access_time, size: 16),
-                    label: const Text('获取当前时间',
-                        style: TextStyle(fontSize: 12)),
-                    style: TextButton.styleFrom(
-                      foregroundColor: c.goldBright,
+                    label: const Text(
+                      '获取当前时间',
+                      style: TextStyle(fontSize: AppFontSize.label),
+                    ),
+                    style: AppButtonStyles.text(
+                      foregroundColor: c.jade,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 2),
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       minimumSize: const Size(0, 28),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -181,7 +208,10 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: CopyResultButton(text: _buildCopyText(), enabled: _r != null),
+                      child: CopyResultButton(
+                        text: _buildCopyText(),
+                        enabled: _r != null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -199,6 +229,10 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
           const SizedBox(height: 14),
           if (_r != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_r!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 10),
         ],
       ),
@@ -206,10 +240,10 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
   }
 
   Widget _f(TextEditingController c, String hint) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint, isDense: true),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(hintText: hint, isDense: true),
+  );
 
   Widget _genderChip(String label, bool male) {
     final c = AppClr.of(context);
@@ -219,23 +253,28 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? c.gold.withValues(alpha: 0.18) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: selected
+              ? c.gold.withValues(alpha: 0.18)
+              : AppColors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.compactRound),
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
-        child: Text(label,
-            style: TextStyle(
-              color: selected ? c.goldBright : c.textBody,
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? c.goldBright : c.textBody,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildResult(ChengguResult r) {
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('chenggu', AnimationKind.reveal) ??
@@ -248,39 +287,57 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(r.lunarDisplay,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              r.lunarDisplay,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('八字：${r.bazi}',
-                style: TextStyle(color: c.textBody, fontSize: 13)),
+            Text(
+              '八字：${r.bazi}',
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.bodySmall,
+              ),
+            ),
             const SizedBox(height: 10),
             Center(
               child: Column(
                 children: [
-                  Text(r.weightLabel,
-                      style: TextStyle(
-                          color: c.gold,
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4)),
+                  Text(
+                    r.weightLabel,
+                    style: TextStyle(
+                      color: c.gold,
+                      fontSize: AppFontSize.displayLarge,
+                      fontWeight: AppFontWeight.bold,
+                      letterSpacing: AppLetterSpacing.decorative,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: c.fire.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(
+                        AppRadius.compactRound,
+                      ),
                       border: Border.all(color: c.fireGlow),
                     ),
-                    child: Text(r.fate.title,
-                        style: TextStyle(
-                            color: c.fireGlow,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2)),
+                    child: Text(
+                      r.fate.title,
+                      style: TextStyle(
+                        color: c.fireGlow,
+                        fontSize: AppFontSize.body,
+                        fontWeight: AppFontWeight.bold,
+                        letterSpacing: AppLetterSpacing.label,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -289,41 +346,57 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
         ),
       ),
       sections: [
-        Text('◆ 四骨重量',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 四骨重量',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         _buildWeightBreakdown(r),
-        Text('◆ 称骨歌',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 称骨歌',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(12),
-          child: Text(r.fate.poem,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: c.goldBright,
-                  fontSize: 15,
-                  height: 1.8,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1)),
-        ),
-        Text('◆ ${_isMale ? "男" : "女"}命详解',
+          child: Text(
+            r.fate.poem,
+            textAlign: TextAlign.center,
             style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+              color: c.goldBright,
+              fontSize: AppFontSize.button,
+              height: AppLineHeight.ritual,
+              fontWeight: AppFontWeight.medium,
+              letterSpacing: AppLetterSpacing.subtle,
+            ),
+          ),
+        ),
+        Text(
+          '◆ ${_isMale ? "男" : "女"}命详解',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(12),
           child: Text(
             _isMale ? r.fate.male : r.fate.female,
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.7),
+            style: TextStyle(
+              color: c.textBody,
+              fontSize: AppFontSize.bodySmall,
+              height: AppLineHeight.spacious,
+            ),
           ),
         ),
       ],
@@ -352,36 +425,55 @@ class _ChengguPageState extends ConsumerState<ChengguPage> {
                 children: [
                   SizedBox(
                     width: 28,
-                    child: Text(label,
-                        style: TextStyle(
-                            color: c.textMeta,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        color: c.textMeta,
+                        fontSize: AppFontSize.label,
+                        fontWeight: AppFontWeight.bold,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(desc,
-                        style: TextStyle(color: c.textPrimary, fontSize: 13)),
+                    child: Text(
+                      desc,
+                      style: TextStyle(
+                        color: c.textPrimary,
+                        fontSize: AppFontSize.bodySmall,
+                      ),
+                    ),
                   ),
-                  Text(chengguWeightDecimal(qian).split('（').first,
-                      style: TextStyle(color: c.fireGlow, fontSize: 12)),
+                  Text(
+                    chengguWeightDecimal(qian).split('（').first,
+                    style: TextStyle(
+                      color: c.fireGlow,
+                      fontSize: AppFontSize.label,
+                    ),
+                  ),
                 ],
               ),
             ),
           Divider(height: 12, color: c.goldBorder),
           Row(
             children: [
-              Text('总骨重',
-                  style: TextStyle(
-                      color: c.gold,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                '总骨重',
+                style: TextStyle(
+                  color: c.gold,
+                  fontSize: AppFontSize.bodySmall,
+                  fontWeight: AppFontWeight.bold,
+                ),
+              ),
               const Spacer(),
-              Text(chengguWeightDecimal(r.totalQian),
-                  style: TextStyle(
-                      color: c.goldBright,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                chengguWeightDecimal(r.totalQian),
+                style: TextStyle(
+                  color: c.goldBright,
+                  fontSize: AppFontSize.body,
+                  fontWeight: AppFontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],

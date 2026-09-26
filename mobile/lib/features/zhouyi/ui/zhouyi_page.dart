@@ -19,6 +19,7 @@ import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
 import '../../../shared/widgets/svg_icon.dart';
 import '../../../shared/widgets/tech_guide_overlay.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../algorithm/divine.dart';
 import 'hexagram_view.dart';
 
@@ -32,6 +33,7 @@ class ZhouyiPage extends ConsumerStatefulWidget {
 class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
     with SingleTickerProviderStateMixin {
   ZhouyiResult? _result;
+  HistoryEntry? _resultHistoryEntry;
   bool _busy = false;
   late final AnimationController _anim;
   ScrollController? _sheetCtrl;
@@ -57,17 +59,13 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
   }
 
   /// 首次进入显示使用指引（只弹一次）。
-  Future<void> _showGuide() => showTechGuideOnce(
-        context,
-        'zhouyi',
-        '周易金钱卦 · 使用指引',
-        const [
-          GuideStep('起卦', '心中默念所问之事，点「摇卦」摇六次（金钱卦，三铜钱之和定阴阳），注意力集中于顶点时起卦最灵。'),
-          GuideStep('本卦与变卦', '老阴(6)、老阳(9)为变爻——阳极生阴、阴极生阳，翻转后得「之卦」；无变爻则以本卦为占。'),
-          GuideStep('卦辞爻辞', '无变爻看本卦卦辞；一个变爻看该爻爻辞；多个变爻看之卦卦辞。'),
-          GuideStep('心诚则灵', '一念不生之际起卦最准，切忌反复摇卦。'),
-        ],
-      );
+  Future<void> _showGuide() =>
+      showTechGuideOnce(context, 'zhouyi', '周易金钱卦 · 使用指引', const [
+        GuideStep('起卦', '心中默念所问之事，点「摇卦」摇六次（金钱卦，三铜钱之和定阴阳），注意力集中于顶点时起卦最灵。'),
+        GuideStep('本卦与变卦', '老阴(6)、老阳(9)为变爻——阳极生阴、阴极生阳，翻转后得「之卦」；无变爻则以本卦为占。'),
+        GuideStep('卦辞爻辞', '无变爻看本卦卦辞；一个变爻看该爻爻辞；多个变爻看之卦卦辞。'),
+        GuideStep('心诚则灵', '一念不生之际起卦最准，切忌反复摇卦。'),
+      ]);
 
   /// v2.4.3：从历史记录恢复，按 extra 快照重建卦象（周易为随机起卦，存结果快照）。
   void _maybeRestore() {
@@ -92,6 +90,7 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         changing: (extra['changing'] as List).cast<int>(),
         lines: lines,
       );
+      _resultHistoryEntry = restore;
     });
     _anim.value = 1; // 跳过逐爻揭示，直接显示完整卦象
   }
@@ -115,6 +114,7 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
   void _onReset() {
     setState(() {
       _result = null;
+      _resultHistoryEntry = null;
       _busy = false;
     });
     _anim.value = 0;
@@ -124,7 +124,7 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
   void _onRevealed() {
     setState(() => _busy = false);
     _anim.forward(from: 0);
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'zhouyi',
       techName: '周易',
@@ -141,7 +141,9 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         'lowerName': _result?.lowerName,
         'changing': _result?.changing,
       },
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   @override
@@ -156,12 +158,15 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         ),
         title: Column(
           children: [
-            const Text('周　易', style: TextStyle(fontSize: 18)),
-            Text('金 钱 卦',
-                style: TextStyle(
-                    fontSize: 10,
-                    color: c.textSubtitle,
-                    letterSpacing: 4)),
+            const Text('周　易', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '金 钱 卦',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -185,11 +190,14 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
                       return Container(
                         decoration: BoxDecoration(
                           color: c.bg.withValues(alpha: 0.95),
-                          borderRadius:
-                              const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppRadius.panel),
+                          ),
                           border: Border(
-                              top: BorderSide(
-                                  color: c.gold.withValues(alpha: 0.5))),
+                            top: BorderSide(
+                              color: c.gold.withValues(alpha: 0.5),
+                            ),
+                          ),
                         ),
                         child: CustomScrollView(
                           controller: scrollController,
@@ -197,10 +205,13 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
                             SliverToBoxAdapter(child: _buildDragHandle()),
                             SliverPersistentHeader(
                               pinned: true,
-                              delegate:
-                                  _PinHeaderDelegate(child: _buildActionBar(r)),
+                              delegate: _PinHeaderDelegate(
+                                child: _buildActionBar(r),
+                              ),
                             ),
                             _buildResultSliver(r),
+                            if (_resultHistoryEntry != null)
+                              _buildAiLaunchSliver(),
                           ],
                         ),
                       );
@@ -222,7 +233,7 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         height: 4,
         decoration: BoxDecoration(
           color: c.gold.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(AppRadius.hairline),
         ),
       ),
     );
@@ -244,91 +255,101 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
   /// GoldButton 内部 LayoutBuilder 防御层仍保留作为兜底。同步 _PinHeaderDelegate
   /// extent 90 → 104 → 90（单行）。
   Widget _buildActionBar(ZhouyiResult? r) => Container(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-        color: AppClr.of(context).bg.withValues(alpha: 0.92),
-        // minHeight 必须与 _PinHeaderDelegate 的 extent(90) 一致，否则 child 实际
-        // 高度 < delegate extent(90) 会产生 paintExtent < layoutExtent 的异常
-        // SliverGeometry，致后续 sliver 不被 layout、viewport paint 时空指针崩溃。
-        constraints: const BoxConstraints(minHeight: 90),
-        child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GoldButton(
-                  text: _busy ? '摇卦中…' : '摇卦',
-                  onPressed: _busy ? null : _onToss,
-                ),
-                const SizedBox(width: 8),
-                DarkButton(
-                  icon: const SvgIcon('refresh'),
-                  text: '重置',
-                  onPressed: _busy ? null : _onReset,
-                ),
-                const SizedBox(width: 8),
-                CopyResultButton(
-                    text: _buildCopyText(), enabled: r != null),
-                const SizedBox(width: 8),
-                ShareResultButton(
-                  boundaryKey: _boundaryKey,
-                  enabled: r != null,
-                  fallbackText: _buildCopyText(),
-                ),
-              ],
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+    color: AppClr.of(context).bg.withValues(alpha: 0.92),
+    // minHeight 必须与 _PinHeaderDelegate 的 extent(90) 一致，否则 child 实际
+    // 高度 < delegate extent(90) 会产生 paintExtent < layoutExtent 的异常
+    // SliverGeometry，致后续 sliver 不被 layout、viewport paint 时空指针崩溃。
+    constraints: const BoxConstraints(minHeight: 90),
+    child: Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GoldButton(
+              text: _busy ? '摇卦中…' : '摇卦',
+              onPressed: _busy ? null : _onToss,
             ),
-          ),
+            const SizedBox(width: 8),
+            DarkButton(
+              icon: const SvgIcon('refresh'),
+              text: '重置',
+              onPressed: _busy ? null : _onReset,
+            ),
+            const SizedBox(width: 8),
+            CopyResultButton(text: _buildCopyText(), enabled: r != null),
+            const SizedBox(width: 8),
+            ShareResultButton(
+              boundaryKey: _boundaryKey,
+              enabled: r != null,
+              fallbackText: _buildCopyText(),
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   /// 结果列表 sliver —— 移动/桌面共用。
   /// 包裹 RepaintBoundary 以支持截图分享。
   /// RepaintBoundary 仅包裹卦象展示结果区，绝不包裹底部按钮（ActionBar）。
   Widget _buildResultSliver(ZhouyiResult? r) => SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-        sliver: SliverToBoxAdapter(
-          child: RepaintBoundary(
-            key: _boundaryKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: _resultItems(r),
-            ),
-          ),
+    padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+    sliver: SliverToBoxAdapter(
+      child: RepaintBoundary(
+        key: _boundaryKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _resultItems(r),
         ),
-      );
+      ),
+    ),
+  );
+
+  Widget _buildAiLaunchSliver() => SliverPadding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.large,
+      0,
+      AppSpacing.large,
+      AppSpacing.xLarge,
+    ),
+    sliver: SliverToBoxAdapter(
+      child: Center(
+        child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+      ),
+    ),
+  );
 
   /// 桌面端布局：可视化（固定）+ 交互结果（滚轮滚动）。
   /// 桌面端鼠标拖拽不灵，弃用 DraggableScrollableSheet，改上下分栏。
   Widget _buildDesktopBody(ZhouyiResult? r) {
     final c = AppClr.of(context);
     return Column(
-        children: [
-          SizedBox(
-            height: 280,
-            child: Center(
-              child: HexagramView(lines: r?.lines, onDone: _onRevealed),
-            ),
+      children: [
+        SizedBox(
+          height: 280,
+          child: Center(
+            child: HexagramView(lines: r?.lines, onDone: _onRevealed),
           ),
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: c.gold.withValues(alpha: 0.5),
+        ),
+        Divider(height: 1, thickness: 1, color: c.gold.withValues(alpha: 0.5)),
+        Expanded(
+          child: CustomScrollView(
+            controller: _sheetCtrl,
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _PinHeaderDelegate(child: _buildActionBar(r)),
+              ),
+              _buildResultSliver(r),
+              if (_resultHistoryEntry != null) _buildAiLaunchSliver(),
+            ],
           ),
-          Expanded(
-            child: CustomScrollView(
-              controller: _sheetCtrl,
-              slivers: [
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _PinHeaderDelegate(child: _buildActionBar(r)),
-                ),
-                _buildResultSliver(r),
-              ],
-            ),
-          ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   List<Widget> _resultItems(ZhouyiResult? r) {
@@ -337,8 +358,7 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
       return [
         const SizedBox(height: 40),
         Center(
-          child: Text('点击「摇卦」以金钱卦起占',
-              style: TextStyle(color: c.textHint)),
+          child: Text('点击「摇卦」以金钱卦起占', style: TextStyle(color: c.textHint)),
         ),
       ];
     }
@@ -348,11 +368,14 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         animation: _anim,
         interval: const Interval(0.0, 0.30),
         child: Center(
-          child: Text(r.benName,
-              style: TextStyle(
-                  color: c.goldBright,
-                  fontSize: 72,
-                  fontWeight: FontWeight.bold)),
+          child: Text(
+            r.benName,
+            style: TextStyle(
+              color: c.goldBright,
+              fontSize: AppFontSize.ritualDisplay,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 6),
@@ -360,9 +383,14 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         animation: _anim,
         interval: const Interval(0.10, 0.36),
         child: Center(
-          child: Text('$benXiang${r.benName}',
-              style: TextStyle(
-                  color: c.gold, fontSize: 18, letterSpacing: 4)),
+          child: Text(
+            '$benXiang${r.benName}',
+            style: TextStyle(
+              color: c.gold,
+              fontSize: AppFontSize.title,
+              letterSpacing: AppLetterSpacing.decorative,
+            ),
+          ),
         ),
       ),
       const SizedBox(height: 12),
@@ -391,14 +419,23 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('变爻 ${r.changing.map((i) => _posLabel(i)).join("、")} → 之卦 ${r.bianName}',
-                    style: TextStyle(
-                        color: c.changing,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  '变爻 ${r.changing.map((i) => _posLabel(i)).join("、")} → 之卦 ${r.bianName}',
+                  style: TextStyle(
+                    color: c.changing,
+                    fontSize: AppFontSize.body,
+                    fontWeight: AppFontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('老阴(6)/老阳(9)为变爻，阴极生阳、阳极生阴，得之卦。',
-                    style: TextStyle(color: c.textBody, fontSize: 11, height: 1.5)),
+                Text(
+                  '老阴(6)/老阳(9)为变爻，阴极生阳、阳极生阴，得之卦。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.caption,
+                    height: AppLineHeight.body,
+                  ),
+                ),
               ],
             ),
           ),
@@ -410,8 +447,10 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
           interval: const Interval(0.38, 0.66),
           child: DecorativePanel(
             padding: const EdgeInsets.all(12),
-            child: Text('无变爻，以本卦卦象为占。',
-                style: TextStyle(color: c.textBody, fontSize: 12)),
+            child: Text(
+              '无变爻，以本卦卦象为占。',
+              style: TextStyle(color: c.textBody, fontSize: AppFontSize.label),
+            ),
           ),
         ),
       ],
@@ -430,8 +469,10 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
       for (final i in r.changing)
         EntranceItem(
           animation: _anim,
-          interval: Interval((0.62 + i * 0.04).clamp(0.0, 0.92),
-              (0.86 + i * 0.02).clamp(0.0, 1.0)),
+          interval: Interval(
+            (0.62 + i * 0.04).clamp(0.0, 0.92),
+            (0.86 + i * 0.02).clamp(0.0, 1.0),
+          ),
           child: _buildYaoCiCard(r, i),
         ),
       // —— 变卦卦辞 ——
@@ -464,22 +505,35 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: titleColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            title,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           if (ci.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(ci,
-                style: TextStyle(
-                    color: c.textBody, fontSize: 14, height: 1.6)),
+            Text(
+              ci,
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.body,
+                height: AppLineHeight.reading,
+              ),
+            ),
           ],
           if (note.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(note,
-                style: TextStyle(
-                    color: c.textSubtitle, fontSize: 12, height: 1.5)),
+            Text(
+              note,
+              style: TextStyle(
+                color: c.textSubtitle,
+                fontSize: AppFontSize.label,
+                height: AppLineHeight.body,
+              ),
+            ),
           ],
         ],
       ),
@@ -500,22 +554,35 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('变爻 · $posName',
-                style: TextStyle(
-                    color: c.changing,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              '变爻 · $posName',
+              style: TextStyle(
+                color: c.changing,
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             if (ci.isNotEmpty) ...[
               const SizedBox(height: 6),
-              Text(ci,
-                  style: TextStyle(
-                      color: c.textBody, fontSize: 14, height: 1.6)),
+              Text(
+                ci,
+                style: TextStyle(
+                  color: c.textBody,
+                  fontSize: AppFontSize.body,
+                  height: AppLineHeight.reading,
+                ),
+              ),
             ],
             if (note.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(note,
-                  style: TextStyle(
-                      color: c.textSubtitle, fontSize: 12, height: 1.5)),
+              Text(
+                note,
+                style: TextStyle(
+                  color: c.textSubtitle,
+                  fontSize: AppFontSize.label,
+                  height: AppLineHeight.body,
+                ),
+              ),
             ],
           ],
         ),
@@ -529,8 +596,12 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
     if (r == null) return '';
     final sb = StringBuffer('【周易 · 金钱卦】\n');
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
-    sb.writeln('本卦：${r.benName}（${xiang[r.upperName]}${xiang[r.lowerName]}${r.benName}）');
-    sb.writeln('上卦：${r.upperName}${xiang[r.upperName]}  下卦：${r.lowerName}${xiang[r.lowerName]}');
+    sb.writeln(
+      '本卦：${r.benName}（${xiang[r.upperName]}${xiang[r.lowerName]}${r.benName}）',
+    );
+    sb.writeln(
+      '上卦：${r.upperName}${xiang[r.upperName]}  下卦：${r.lowerName}${xiang[r.lowerName]}',
+    );
     sb.writeln('\n—— 六爻 ——');
     const pos = ['初', '二', '三', '四', '五', '上'];
     for (var i = 0; i < 6; i++) {
@@ -540,7 +611,9 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
       sb.writeln('${pos[i]}爻：$type$ch');
     }
     if (r.bianName != null) {
-      sb.writeln('\n变爻：${r.changing.map((i) => pos[i]).join("、")} → 之卦：${r.bianName}');
+      sb.writeln(
+        '\n变爻：${r.changing.map((i) => pos[i]).join("、")} → 之卦：${r.bianName}',
+      );
     } else {
       sb.writeln('\n无变爻，以本卦为占。');
     }
@@ -581,14 +654,22 @@ class _ZhouyiPageState extends ConsumerState<ZhouyiPage>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label,
-            style: TextStyle(color: c.textSubtitle, fontSize: 11)),
+        Text(
+          label,
+          style: TextStyle(
+            color: c.textSubtitle,
+            fontSize: AppFontSize.caption,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text('$name${xiang[name]}',
-            style: TextStyle(
-                color: c.goldBright,
-                fontSize: 18,
-                fontWeight: FontWeight.bold)),
+        Text(
+          '$name${xiang[name]}',
+          style: TextStyle(
+            color: c.goldBright,
+            fontSize: AppFontSize.title,
+            fontWeight: AppFontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -609,7 +690,8 @@ class _PinHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get maxExtent => 90;
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlaps) => child;
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) =>
+      child;
   @override
   // child 依赖可变状态（结果 r / 摇卦 _busy），必须返回 true：page setState 后
   // 需 rebuild header，复制/分享按钮的 enabled 等参数才能随状态更新。曾误设

@@ -49,12 +49,12 @@ Future<AiRequestSelection?> showAiContextConsent({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: AppColors.transparent,
     builder: (sheetContext) => FractionallySizedBox(
       heightFactor: 0.92,
       child: Material(
         color: AppClr.of(sheetContext).bgInner,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.large)),
         clipBehavior: Clip.antiAlias,
         child: consentForm,
       ),
@@ -111,8 +111,8 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
                   '确认本次发送内容',
                   style: TextStyle(
                     color: c.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppFontSize.eyebrow,
+                    fontWeight: AppFontWeight.semibold,
                   ),
                 ),
               ),
@@ -130,7 +130,7 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
             alignment: Alignment.centerLeft,
             child: Text(
               '本应用只在这次请求中加入所选内容，不会自动带入后续请求。服务商侧的处理与保存按其服务规则进行；未勾选的本地资料不会加入请求。',
-              style: TextStyle(color: c.textMeta, fontSize: 12, height: 1.5),
+              style: TextStyle(color: c.textMeta, fontSize: AppFontSize.label, height: AppLineHeight.body),
             ),
           ),
         ),
@@ -208,7 +208,7 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
       color: c.card,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.panelCompact),
       border: Border.all(color: c.jade.withValues(alpha: 0.34)),
     ),
     child: Column(
@@ -222,8 +222,8 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
               '本次问题（必发送）',
               style: TextStyle(
                 color: c.textPrimary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: AppFontSize.label,
+                fontWeight: AppFontWeight.semibold,
               ),
             ),
           ],
@@ -231,7 +231,7 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
         const SizedBox(height: 8),
         SelectableText(
           widget.question,
-          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.55),
+          style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.relaxedBody),
         ),
       ],
     ),
@@ -249,7 +249,7 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
     child: Container(
       decoration: BoxDecoration(
         color: c.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.panelCompact),
         border: Border.all(
           color: value
               ? c.jade.withValues(alpha: 0.38)
@@ -262,22 +262,22 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
             value: value,
             onChanged: onChanged,
             activeColor: c.jade,
-            checkColor: Colors.white,
+            checkColor: c.onAction,
             contentPadding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
             controlAffinity: ListTileControlAffinity.leading,
             title: Text(
               title,
               style: TextStyle(
                 color: c.textPrimary,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: AppFontSize.bodySmall,
+                fontWeight: AppFontWeight.medium,
               ),
             ),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Text(
                 subtitle,
-                style: TextStyle(color: c.textMeta, fontSize: 11),
+                style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
               ),
             ),
           ),
@@ -289,14 +289,14 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: c.bgInner,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.control),
                 ),
                 child: SelectableText(
                   preview,
                   style: TextStyle(
                     color: c.textBody,
-                    fontSize: 11,
-                    height: 1.45,
+                    fontSize: AppFontSize.caption,
+                    height: AppLineHeight.denseBody,
                   ),
                 ),
               ),
@@ -331,9 +331,9 @@ class _AiContextConsentFormState extends State<_AiContextConsentForm> {
             ),
             icon: const Icon(Icons.send, size: 17),
             label: const Text('发送所选内容'),
-            style: FilledButton.styleFrom(
+            style: AppButtonStyles.filled(
               backgroundColor: c.jade,
-              foregroundColor: Colors.white,
+              foregroundColor: c.onAction,
             ),
           ),
         ),

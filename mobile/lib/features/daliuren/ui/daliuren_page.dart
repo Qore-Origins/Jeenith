@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/copy_result_button.dart';
 import '../../../shared/widgets/share_result_button.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../algorithm/divine.dart';
 
@@ -33,6 +34,7 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
   final _day = TextEditingController();
   final _hour = TextEditingController();
   DaliurenResult? _r;
+  HistoryEntry? _resultHistoryEntry;
   final GlobalKey _boundaryKey = GlobalKey();
 
   @override
@@ -90,6 +92,7 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
       _day.text = d.toString();
       _hour.text = h.toString();
       _r = divine(y, m, d, h);
+      _resultHistoryEntry = restore;
     });
   }
 
@@ -121,12 +124,13 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
     final berr = validateBirth(y, m, d, h);
     if (berr != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating));
+        SnackBar(content: Text(berr), behavior: SnackBarBehavior.floating),
+      );
       return;
     }
     setState(() => _r = divine(y, m, d, h));
     FocusScope.of(context).unfocus();
-    unawaited(HistoryStore.add(HistoryEntry(
+    final entry = HistoryEntry(
       id: HistoryStore.generateId(),
       techId: 'daliuren',
       techName: '大六壬',
@@ -134,7 +138,9 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
       summary: _r == null ? '' : '${_r!.zongMen} ${_r!.sanChuan.first.shen}传',
       detail: _buildCopyText(),
       extra: {'year': y, 'month': m, 'day': d, 'hour': h},
-    )));
+    );
+    setState(() => _resultHistoryEntry = entry);
+    unawaited(HistoryStore.add(entry));
   }
 
   @override
@@ -148,10 +154,15 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
         ),
         title: Column(
           children: [
-            const Text('大六壬', style: TextStyle(fontSize: 18)),
-            Text('三 传 四 课',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('大六壬', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '三 传 四 课',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
@@ -163,8 +174,13 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('公历时辰（年 月 日 时 0-23）',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '公历时辰（年 月 日 时 0-23）',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -184,12 +200,16 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
                   child: TextButton.icon(
                     onPressed: _fillNow,
                     icon: const Icon(Icons.access_time, size: 16),
-                    label: const Text('获取当前时间',
-                        style: TextStyle(fontSize: 12)),
-                    style: TextButton.styleFrom(
-                      foregroundColor: c.goldBright,
+                    label: const Text(
+                      '获取当前时间',
+                      style: TextStyle(fontSize: AppFontSize.label),
+                    ),
+                    style: AppButtonStyles.text(
+                      foregroundColor: c.jade,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 2),
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       minimumSize: const Size(0, 28),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -201,7 +221,10 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: CopyResultButton(text: _buildCopyText(), enabled: _r != null),
+                      child: CopyResultButton(
+                        text: _buildCopyText(),
+                        enabled: _r != null,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -219,6 +242,10 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
           const SizedBox(height: 14),
           if (_r != null)
             RepaintBoundary(key: _boundaryKey, child: _buildResult(_r!)),
+          if (_resultHistoryEntry != null)
+            Center(
+              child: AiCaseLaunchButton.fromHistoryEntry(_resultHistoryEntry!),
+            ),
           const SizedBox(height: 10),
         ],
       ),
@@ -226,10 +253,10 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
   }
 
   Widget _f(TextEditingController c, String hint) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(hintText: hint, isDense: true),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    decoration: InputDecoration(hintText: hint, isDense: true),
+  );
 
   String _buildCopyText() {
     final r = _r;
@@ -238,7 +265,9 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
     sb.writeln('时间：${DateTime.now().toString().substring(0, 19)}');
     sb.writeln(r.lunarDisplay);
     sb.writeln('日柱：${r.dayGanZhi}  时柱：${r.timeGanZhi}');
-    sb.writeln('月将：${r.yueJiang}  贵人：${r.guiRenType == "day" ? "昼贵" : "夜贵"}（${r.guiRenZhi}）');
+    sb.writeln(
+      '月将：${r.yueJiang}  贵人：${r.guiRenType == "day" ? "昼贵" : "夜贵"}（${r.guiRenZhi}）',
+    );
     sb.writeln('九宗门：${r.zongMen}');
     sb.writeln('\n—— 四课 ——');
     final labels = ['一课', '二课', '三课', '四课'];
@@ -248,11 +277,15 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
     sb.writeln('\n—— 三传 ——');
     final chuanLabels = ['初传', '中传', '末传'];
     for (var i = 0; i < 3; i++) {
-      sb.writeln('${chuanLabels[i]}：${r.sanChuan[i].shen}（${r.sanChuan[i].tianJiang}）');
+      sb.writeln(
+        '${chuanLabels[i]}：${r.sanChuan[i].shen}（${r.sanChuan[i].tianJiang}）',
+      );
     }
     sb.writeln('\n—— 天盘 ——');
     for (var i = 0; i < 12; i++) {
-      sb.writeln('地${r.diPan[i]} → 天${r.tianPan[i]}  （${r.tianJiangOnTian[i]}）');
+      sb.writeln(
+        '地${r.diPan[i]} → 天${r.tianPan[i]}  （${r.tianJiangOnTian[i]}）',
+      );
     }
     sb.writeln('\n—— 志极 Jeenith · 叩问本心 ——');
     return sb.toString();
@@ -260,7 +293,8 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
 
   Widget _buildResult(DaliurenResult r) {
     final c = AppClr.of(context);
-    final enabled = ref
+    final enabled =
+        ref
             .watch(configProvider)
             .valueOrNull
             ?.isAnimationEnabled('daliuren', AnimationKind.reveal) ??
@@ -273,15 +307,22 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(r.lunarDisplay,
-                style: TextStyle(
-                    color: c.goldBright,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold)),
+            Text(
+              r.lunarDisplay,
+              style: TextStyle(
+                color: c.goldBright,
+                fontSize: AppFontSize.body,
+                fontWeight: AppFontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text('日柱 ${r.dayGanZhi}  ·  时柱 ${r.timeGanZhi}',
-                style: TextStyle(
-                    color: c.textBody, fontSize: 13)),
+            Text(
+              '日柱 ${r.dayGanZhi}  ·  时柱 ${r.timeGanZhi}',
+              style: TextStyle(
+                color: c.textBody,
+                fontSize: AppFontSize.bodySmall,
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -289,20 +330,26 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
               children: [
                 _buildChip('月将', r.yueJiang, c.goldBright),
                 _buildChip('宗门', r.zongMen, c.fireGlow),
-                _buildChip(r.guiRenType == 'day' ? '昼贵' : '夜贵',
-                    r.guiRenZhi, c.woodGlow),
+                _buildChip(
+                  r.guiRenType == 'day' ? '昼贵' : '夜贵',
+                  r.guiRenZhi,
+                  c.woodGlow,
+                ),
               ],
             ),
           ],
         ),
       ),
       sections: [
-        Text('◆ 四课',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 四课',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(10),
           child: Row(
@@ -310,16 +357,19 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
               for (var i = 0; i < 4; i++) ...[
                 Expanded(child: _buildKeCell(i + 1, r.siKe[i])),
                 if (i < 3) const SizedBox(width: 6),
-              ]
+              ],
             ],
           ),
         ),
-        Text('◆ 三传',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 三传',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(10),
           child: Row(
@@ -327,16 +377,19 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
               for (var i = 0; i < 3; i++) ...[
                 Expanded(child: _buildChuanCell(i, r.sanChuan[i])),
                 if (i < 2) const SizedBox(width: 6),
-              ]
+              ],
             ],
           ),
         ),
-        Text('◆ 天盘加临图',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 天盘加临图',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(8),
           child: AspectRatio(
@@ -347,12 +400,15 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
             ),
           ),
         ),
-        Text('◆ 十二天将加临',
-            style: TextStyle(
-                color: c.gold,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2)),
+        Text(
+          '◆ 十二天将加临',
+          style: TextStyle(
+            color: c.gold,
+            fontSize: AppFontSize.bodySmall,
+            fontWeight: AppFontWeight.bold,
+            letterSpacing: AppLetterSpacing.label,
+          ),
+        ),
         DecorativePanel(
           padding: const EdgeInsets.all(10),
           child: Wrap(
@@ -362,16 +418,20 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
               for (var i = 0; i < 12; i++)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 3),
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: c.bgInner.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppRadius.compact),
                     border: Border.all(color: c.goldBorder),
                   ),
                   child: Text(
                     '${r.diPan[i]}:${r.tianJiangOnTian[i]}',
                     style: TextStyle(
-                        color: c.waterDeepGlow, fontSize: 11),
+                      color: c.waterDeepGlow,
+                      fontSize: AppFontSize.caption,
+                    ),
                   ),
                 ),
             ],
@@ -387,16 +447,25 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: c.gold.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppRadius.compactRound),
         border: Border.all(color: c.goldBorder, width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: TextStyle(color: c.textMeta, fontSize: 11)),
+          Text(
+            label,
+            style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
+          ),
           const SizedBox(width: 4),
-          Text(value,
-              style: TextStyle(color: valueColor, fontSize: 13, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: AppFontSize.bodySmall,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -408,20 +477,32 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: c.bgInner.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppRadius.compactRound),
         border: Border.all(color: c.goldBorder),
       ),
       child: Column(
         children: [
-          Text('$index 课',
-              style: TextStyle(color: c.textMeta, fontSize: 10)),
+          Text(
+            '$index 课',
+            style: TextStyle(color: c.textMeta, fontSize: AppFontSize.micro),
+          ),
           const SizedBox(height: 4),
-          Text(ke.top,
-              style: TextStyle(
-                  color: c.goldBright, fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(
+            ke.top,
+            style: TextStyle(
+              color: c.goldBright,
+              fontSize: AppFontSize.bodyLarge,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           Divider(height: 6, color: c.goldBorder),
-          Text(ke.bottom,
-              style: TextStyle(color: c.textPrimary, fontSize: 16)),
+          Text(
+            ke.bottom,
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: AppFontSize.bodyLarge,
+            ),
+          ),
         ],
       ),
     );
@@ -435,20 +516,32 @@ class _DaliurenPageState extends ConsumerState<DaliurenPage> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
         color: c.bgInner.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: colors[index].withValues(alpha: 0.4), width: 1),
+        borderRadius: BorderRadius.circular(AppRadius.compactRound),
+        border: Border.all(
+          color: colors[index].withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
-          Text(labels[index],
-              style: TextStyle(color: c.textMeta, fontSize: 11)),
+          Text(
+            labels[index],
+            style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
+          ),
           const SizedBox(height: 6),
-          Text(chuan.shen,
-              style: TextStyle(
-                  color: colors[index], fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(
+            chuan.shen,
+            style: TextStyle(
+              color: colors[index],
+              fontSize: AppFontSize.metric,
+              fontWeight: AppFontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(chuan.tianJiang,
-              style: TextStyle(color: c.textBody, fontSize: 11)),
+          Text(
+            chuan.tianJiang,
+            style: TextStyle(color: c.textBody, fontSize: AppFontSize.caption),
+          ),
         ],
       ),
     );
@@ -494,7 +587,10 @@ class _TianPanPainter extends CustomPainter {
     }
 
     // 外圈：地盘 12 支（固定）
-    final diTp = TextPainter(textDirection: TextDirection.ltr, textAlign: TextAlign.center);
+    final diTp = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
     for (var i = 0; i < 12; i++) {
       final angle = (i * 30 - 90) * math.pi / 180;
       final x = center.dx + (outerR + diR) / 2 * math.cos(angle);
@@ -502,7 +598,10 @@ class _TianPanPainter extends CustomPainter {
       diTp.text = TextSpan(
         text: r.diPan[i],
         style: TextStyle(
-            color: clr.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
+          color: clr.textPrimary,
+          fontSize: AppFontSize.bodySmall,
+          fontWeight: AppFontWeight.bold,
+        ),
       );
       diTp.layout();
       diTp.paint(canvas, Offset(x - diTp.width / 2, y - diTp.height / 2));
@@ -510,7 +609,10 @@ class _TianPanPainter extends CustomPainter {
     diTp.dispose();
 
     // 内圈：天盘 12 支（旋转）
-    final tianTp = TextPainter(textDirection: TextDirection.ltr, textAlign: TextAlign.center);
+    final tianTp = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
     for (var i = 0; i < 12; i++) {
       final angle = (i * 30 - 90) * math.pi / 180;
       final x = center.dx + (tianR + innerR) / 2 * math.cos(angle);
@@ -518,7 +620,10 @@ class _TianPanPainter extends CustomPainter {
       tianTp.text = TextSpan(
         text: r.tianPan[i],
         style: TextStyle(
-            color: clr.goldBright, fontSize: 12, fontWeight: FontWeight.bold),
+          color: clr.goldBright,
+          fontSize: AppFontSize.label,
+          fontWeight: AppFontWeight.bold,
+        ),
       );
       tianTp.layout();
       tianTp.paint(canvas, Offset(x - tianTp.width / 2, y - tianTp.height / 2));
@@ -529,11 +634,17 @@ class _TianPanPainter extends CustomPainter {
     final centerTp = TextPainter(textDirection: TextDirection.ltr);
     centerTp.text = TextSpan(
       text: '贵\n${r.guiRenZhi}',
-      style: TextStyle(color: clr.earthGlow, fontSize: 10, height: 1.4),
+      style: TextStyle(
+        color: clr.earthGlow,
+        fontSize: AppFontSize.micro,
+        height: AppLineHeight.compactBody,
+      ),
     );
     centerTp.layout();
     centerTp.paint(
-        canvas, Offset(center.dx - centerTp.width / 2, center.dy - centerTp.height / 2));
+      canvas,
+      Offset(center.dx - centerTp.width / 2, center.dy - centerTp.height / 2),
+    );
     centerTp.dispose();
 
     // 顶部指针

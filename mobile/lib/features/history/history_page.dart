@@ -121,7 +121,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         backgroundColor: sc.card,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.control),
           side: BorderSide(color: sc.goldBorder),
         ),
         duration: const Duration(seconds: 2),
@@ -133,81 +133,95 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final c = AppClr.of(context);
     final gradeBad = c.resolve(AppColors.gradeBad, AppColorsLight.gradeBad);
     final noteCtrl = TextEditingController(text: e.note ?? '');
-    await showDialog(
+    ModalRoute<dynamic>? detailRoute;
+    bool reloadHistoryAfterClose = false;
+    HistoryEntry? entryForAi;
+    await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: c.card,
-        title: Text(
-          '${e.techName} · ${e.summary}',
-          style: TextStyle(
-            color: c.goldBright,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
+      builder: (ctx) {
+        detailRoute = ModalRoute.of<dynamic>(ctx);
+        return AlertDialog(
+          backgroundColor: c.card,
+          title: Text(
+            '${e.techName} · ${e.summary}',
+            style: TextStyle(
+              color: c.goldBright,
+              fontSize: AppFontSize.button,
+              fontWeight: AppFontWeight.bold,
+            ),
           ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              Text(
-                '时间：${e.time.toString().substring(0, 19)}',
-                style: TextStyle(color: c.textMeta, fontSize: 12),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                e.detail,
-                style: TextStyle(color: c.textBody, fontSize: 12, height: 1.5),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: noteCtrl,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  hintText: '添加备注…',
-                  hintStyle: TextStyle(color: c.textHint),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Text(
+                  '时间：${e.time.toString().substring(0, 19)}',
+                  style: TextStyle(
+                    color: c.textMeta,
+                    fontSize: AppFontSize.label,
+                  ),
                 ),
-                style: TextStyle(color: c.textPrimary, fontSize: 13),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  e.detail,
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: AppFontSize.label,
+                    height: AppLineHeight.body,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteCtrl,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: '添加备注…',
+                    hintStyle: TextStyle(color: c.textHint),
+                  ),
+                  style: TextStyle(
+                    color: c.textPrimary,
+                    fontSize: AppFontSize.bodySmall,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async => _copyEntry(e),
-            child: Text('复制', style: TextStyle(color: c.goldBright)),
-          ),
-          TextButton(
-            onPressed: () async {
-              await HistoryStore.remove(e.id);
-              if (!ctx.mounted) return;
-              Navigator.pop(ctx);
-              _reload();
-            },
-            child: Text('删除', style: TextStyle(color: gradeBad)),
-          ),
-          TextButton(
-            onPressed: () async {
-              await HistoryStore.updateNote(
-                e.id,
-                noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-              );
-              if (!ctx.mounted) return;
-              Navigator.pop(ctx);
-              _reload();
-            },
-            child: Text('保存备注', style: TextStyle(color: c.gold)),
-          ),
-          TextButton.icon(
-            onPressed: () async {
-              final note = noteCtrl.text.trim();
-              await HistoryStore.updateNote(e.id, note.isEmpty ? null : note);
-              if (!mounted || !ctx.mounted) return;
-              Navigator.pop(ctx);
-              _reload();
-              context.go(
-                '/jiekua',
-                extra: HistoryEntry(
+          actions: [
+            TextButton(
+              onPressed: () async => _copyEntry(e),
+              child: Text('复制', style: TextStyle(color: c.jade)),
+            ),
+            TextButton(
+              onPressed: () async {
+                await HistoryStore.remove(e.id);
+                if (!ctx.mounted) return;
+                reloadHistoryAfterClose = true;
+                Navigator.pop(ctx);
+              },
+              child: Text('删除', style: TextStyle(color: gradeBad)),
+            ),
+            TextButton(
+              onPressed: () async {
+                await HistoryStore.updateNote(
+                  e.id,
+                  noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+                );
+                if (!ctx.mounted) return;
+                reloadHistoryAfterClose = true;
+                Navigator.pop(ctx);
+              },
+              child: Text('保存备注', style: TextStyle(color: c.jade)),
+            ),
+            TextButton.icon(
+              onPressed: () async {
+                final note = noteCtrl.text.trim();
+                await HistoryStore.updateNote(
+                  e.id,
+                  note.isEmpty ? null : note,
+                );
+                if (!mounted || !ctx.mounted) return;
+                entryForAi = HistoryEntry(
                   id: e.id,
                   techId: e.techId,
                   techName: e.techName,
@@ -216,17 +230,26 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   detail: e.detail,
                   note: note.isEmpty ? null : note,
                   extra: e.extra,
-                ),
-              );
-            },
-            icon: const Icon(Icons.auto_awesome, size: 16),
-            label: const Text('进入 AI 解读'),
-            style: TextButton.styleFrom(foregroundColor: c.jade),
-          ),
-        ],
-      ),
+                );
+                Navigator.pop(ctx);
+              },
+              icon: const Icon(Icons.auto_awesome, size: 16),
+              label: const Text('进入 AI 解读'),
+              style: AppButtonStyles.text(foregroundColor: c.jade),
+            ),
+          ],
+        );
+      },
     );
+    await detailRoute?.completed;
     noteCtrl.dispose();
+    if (!mounted) return;
+    final analysisEntry = entryForAi;
+    if (analysisEntry != null) {
+      context.go('/jiekua', extra: analysisEntry);
+      return;
+    }
+    if (reloadHistoryAfterClose) await _reload();
   }
 
   void _confirmClear() {
@@ -240,13 +263,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           '清空全部历史',
           style: TextStyle(
             color: c.goldBright,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontSize: AppFontSize.button,
+            fontWeight: AppFontWeight.bold,
           ),
         ),
         content: Text(
           '此操作不可撤销，确定清空所有卜算历史记录？',
-          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5),
+          style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.body),
         ),
         actions: [
           TextButton(
@@ -280,13 +303,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           '删除选中记录',
           style: TextStyle(
             color: c.goldBright,
-            fontSize: 15,
-            fontWeight: FontWeight.bold,
+            fontSize: AppFontSize.button,
+            fontWeight: AppFontWeight.bold,
           ),
         ),
         content: Text(
           '确定删除选中的 $count 条记录？此操作不可撤销。',
-          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5),
+          style: TextStyle(color: c.textBody, fontSize: AppFontSize.bodySmall, height: AppLineHeight.body),
         ),
         actions: [
           TextButton(
@@ -469,7 +492,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           TextField(
             controller: _searchCtrl,
             onChanged: (v) => setState(() => _query = v),
-            style: TextStyle(color: c.textPrimary, fontSize: 14),
+            style: TextStyle(color: c.textPrimary, fontSize: AppFontSize.body),
             cursorColor: c.gold,
             decoration: InputDecoration(
               isDense: true,
@@ -484,7 +507,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                     )
                   : null,
               hintText: '搜索摘要 / 术数 / 备注…',
-              hintStyle: TextStyle(color: c.textHint, fontSize: 13),
+              hintStyle: TextStyle(color: c.textHint, fontSize: AppFontSize.bodySmall),
               filled: true,
               fillColor: c.panel,
               contentPadding: const EdgeInsets.symmetric(
@@ -492,11 +515,11 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 vertical: 10,
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.button),
                 borderSide: BorderSide(color: c.goldBorder),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.button),
                 borderSide: BorderSide(color: c.goldBright, width: 1.2),
               ),
             ),
@@ -529,7 +552,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
           color: selected ? c.gold.withValues(alpha: 0.18) : c.panel,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
         alignment: Alignment.center,
@@ -537,8 +560,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           label,
           style: TextStyle(
             color: selected ? c.goldBright : c.textBody,
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            fontSize: AppFontSize.label,
+            fontWeight: selected ? AppFontWeight.bold : AppFontWeight.regular,
           ),
         ),
       ),
@@ -554,7 +577,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         child: ListTile(
           contentPadding: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.panel),
           ),
           leading: _selectMode
               ? Icon(
@@ -567,8 +590,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             '${e.techName} · ${e.summary}',
             style: TextStyle(
               color: c.goldBright,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+              fontSize: AppFontSize.body,
+              fontWeight: AppFontWeight.bold,
             ),
           ),
           subtitle: Column(
@@ -577,12 +600,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               const SizedBox(height: 2),
               Text(
                 e.time.toString().substring(0, 19),
-                style: TextStyle(color: c.textMeta, fontSize: 11),
+                style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
               ),
               if (e.note != null && e.note!.isNotEmpty)
                 Text(
                   '备注：${e.note}',
-                  style: TextStyle(color: c.textBody, fontSize: 12),
+                  style: TextStyle(color: c.textBody, fontSize: AppFontSize.label),
                 ),
             ],
           ),

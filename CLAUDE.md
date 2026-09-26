@@ -10,7 +10,7 @@
 | 项目类型 | 移动 App（Flutter，Android + Windows 桌面）|
 | 所属组织 | Qore（叩心）|
 | 应用包名 | `com.qore.jeenith` |
-| 当前版本 | 2.10.4+44（fix，2026-07-23）|
+| 当前版本 | 3.2.0+54（release，2026-09-26）|
 | 项目位置 | `D:\Code\Project\Qore\Jeenith` |
 
 **项目定位**：叩问本心的卜算合集——小六壬、周易、梅花易数、掷筊、紫微斗数、奇门遁甲、抽签、测字、大六壬、风水罗盘 + 使用手册。一个 APP 首页选术，可扩展卜算框架（加新术 = 新建 feature 目录 + 注册一行）。
@@ -115,5 +115,6 @@ flutter build windows --release
 - 构建用 scripts/build_apk.ps1，版本号 + 归档 + 历史自动
 - 加新卜算术 = 新建 features/xxx/ + 实现 DivinationTech + registry 注册一行
 - 微交互动画统一封装在 core/theme/animations.dart，所有动效可通过设置页全局开关（AppConfig.animationsEnabled）
+- 视觉规范统一从 mobile/lib/core/theme/app_theme.dart 与 design_tokens.dart 调用；页面不得直接写颜色、字体/字重/字号、行高/字距、数值圆角或按钮样式，新增视觉值先补语义令牌/组件工厂并更新 design_system_guard_test.dart
 - CustomPainter 实现必须显式 dispose TextPainter，防止 native handle 泄漏
 - HistoryStore 操作必须使用原子读-改-写模式，防止快速连续卜算时丢数据

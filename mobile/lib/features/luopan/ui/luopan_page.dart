@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/ai/ai_case_launch_context.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/config/platform_info.dart';
+import '../../../shared/widgets/ai_case_launch_button.dart';
 import '../../../shared/widgets/decorative_panel.dart';
 import '../../../shared/widgets/gold_button.dart';
 import '../../daliuren/algorithm/divine.dart' show shan24;
@@ -14,10 +16,30 @@ import '../sensor/compass_provider.dart';
 
 /// 24 山对应的方位标签（顺时针，每 15° 一山）。
 const _directionLabels = [
-  '北', '北', '北', '东北', '东北', '东北',
-  '东', '东', '东', '东南', '东南', '东南',
-  '南', '南', '南', '西南', '西南', '西南',
-  '西', '西', '西', '西北', '西北', '西北',
+  '北',
+  '北',
+  '北',
+  '东北',
+  '东北',
+  '东北',
+  '东',
+  '东',
+  '东',
+  '东南',
+  '东南',
+  '东南',
+  '南',
+  '南',
+  '南',
+  '西南',
+  '西南',
+  '西南',
+  '西',
+  '西',
+  '西',
+  '西北',
+  '西北',
+  '西北',
 ];
 
 /// 八卦四隅位（巽艮坤乾）的标号。
@@ -65,20 +87,25 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
         ),
         title: Column(
           children: [
-            const Text('风水罗盘', style: TextStyle(fontSize: 18)),
-            Text('二 十 四 山',
-                style: TextStyle(
-                    fontSize: 10, color: c.textSubtitle, letterSpacing: 4)),
+            const Text('风水罗盘', style: TextStyle(fontSize: AppFontSize.title)),
+            Text(
+              '二 十 四 山',
+              style: TextStyle(
+                fontSize: AppFontSize.micro,
+                color: c.textSubtitle,
+                letterSpacing: AppLetterSpacing.decorative,
+              ),
+            ),
           ],
         ),
       ),
       body: PlatformInfo.isAndroid
-          ? _buildAndroidBody(azimuth)
+          ? _buildAndroidBody(azimuth, hasReading: reading != null)
           : _buildDesktopPlaceholder(),
     );
   }
 
-  Widget _buildAndroidBody(double azimuth) {
+  Widget _buildAndroidBody(double azimuth, {required bool hasReading}) {
     final c = AppClr.of(context);
     final shanIdx = ((azimuth + 7.5) ~/ 15) % 24;
     final shan = shan24[shanIdx];
@@ -94,16 +121,17 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildReading('方位角', '${azimuth.toStringAsFixed(1)}°', c.goldBright),
+                  _buildReading(
+                    '方位角',
+                    '${azimuth.toStringAsFixed(1)}°',
+                    c.goldBright,
+                  ),
                   _buildReading('坐山', shan, c.fireGlow),
                   _buildReading('方位', dir, c.woodGlow),
                 ],
               ),
               const SizedBox(height: 10),
-              GoldButton(
-                text: _active ? '停止' : '开始',
-                onPressed: _toggle,
-              ),
+              GoldButton(text: _active ? '停止' : '开始', onPressed: _toggle),
             ],
           ),
         ),
@@ -113,7 +141,11 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
           child: AspectRatio(
             aspectRatio: 1,
             child: CustomPaint(
-              painter: _LuopanPainter(azimuth: azimuth, active: _active, clr: c),
+              painter: _LuopanPainter(
+                azimuth: azimuth,
+                active: _active,
+                clr: c,
+              ),
               size: Size.infinite,
             ),
           ),
@@ -121,9 +153,23 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
         const SizedBox(height: 12),
         Text(
           '提示：将设备水平放置并远离金属物体以提高精度。',
-          style: TextStyle(color: c.textMeta, fontSize: 11),
+          style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
           textAlign: TextAlign.center,
         ),
+        if (hasReading)
+          Center(
+            child: AiCaseLaunchButton(
+              launchContext: AiCaseLaunchContext(
+                techId: 'luopan',
+                techName: '风水罗盘',
+                summary: '$dir · $shan',
+                detail:
+                    '方位角：${azimuth.toStringAsFixed(1)}°\n'
+                    '坐山：$shan\n方位：$dir',
+                time: DateTime.now(),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -138,14 +184,19 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
           children: [
             Icon(Icons.explore, color: c.gold, size: 64),
             const SizedBox(height: 16),
-            Text('罗盘功能仅支持 Android 设备',
-                style: TextStyle(color: c.textPrimary, fontSize: 16),
-                textAlign: TextAlign.center),
+            Text(
+              '罗盘功能仅支持 Android 设备',
+              style: TextStyle(
+                color: c.textPrimary,
+                fontSize: AppFontSize.bodyLarge,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             Text(
               '当前平台：${PlatformInfo.label}\n'
               '磁力计硬件在桌面端不可用，请在 Android 设备上体验。',
-              style: TextStyle(color: c.textMeta, fontSize: 12),
+              style: TextStyle(color: c.textMeta, fontSize: AppFontSize.label),
               textAlign: TextAlign.center,
             ),
           ],
@@ -158,11 +209,19 @@ class _LuopanPageState extends ConsumerState<LuopanPage> {
     final c = AppClr.of(context);
     return Column(
       children: [
-        Text(label, style: TextStyle(color: c.textMeta, fontSize: 11)),
+        Text(
+          label,
+          style: TextStyle(color: c.textMeta, fontSize: AppFontSize.caption),
+        ),
         const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                color: valueColor, fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: AppFontSize.metric,
+            fontWeight: AppFontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -174,7 +233,11 @@ class _LuopanPainter extends CustomPainter {
   final bool active;
   final AppClr clr;
 
-  _LuopanPainter({required this.azimuth, required this.active, required this.clr});
+  _LuopanPainter({
+    required this.azimuth,
+    required this.active,
+    required this.clr,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -199,9 +262,14 @@ class _LuopanPainter extends CustomPainter {
     for (var i = 0; i < 24; i++) {
       final angle = (i * 15 - 90) * math.pi / 180;
       canvas.drawLine(
-        Offset(center.dx + r * math.cos(angle), center.dy + r * math.sin(angle)),
-        Offset(center.dx + r * 0.55 * math.cos(angle),
-            center.dy + r * 0.55 * math.sin(angle)),
+        Offset(
+          center.dx + r * math.cos(angle),
+          center.dy + r * math.sin(angle),
+        ),
+        Offset(
+          center.dx + r * 0.55 * math.cos(angle),
+          center.dy + r * 0.55 * math.sin(angle),
+        ),
         linePaint,
       );
     }
@@ -212,7 +280,10 @@ class _LuopanPainter extends CustomPainter {
     canvas.rotate(-azimuth * math.pi / 180);
 
     // 24 山字符
-    final shanTp = TextPainter(textDirection: TextDirection.ltr, textAlign: TextAlign.center);
+    final shanTp = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
     for (var i = 0; i < 24; i++) {
       // 罗盘上山位与方位角对应：北为子(0°)，但 24 山索引 0 是壬(345°-15°)，子(0°) 是索引 1
       // 罗盘上山位的角度（顺时针从北）= i * 15 - 7.5（让"壬"位于 -7.5° 到 +7.5° 的中心为 0°？）
@@ -229,11 +300,14 @@ class _LuopanPainter extends CustomPainter {
         style: TextStyle(
           color: isGua
               ? clr.fireGlow
-              : (shan24[i] == '子' || shan24[i] == '午' || shan24[i] == '卯' || shan24[i] == '酉'
-                  ? clr.goldBright
-                  : clr.textBody),
+              : (shan24[i] == '子' ||
+                        shan24[i] == '午' ||
+                        shan24[i] == '卯' ||
+                        shan24[i] == '酉'
+                    ? clr.goldBright
+                    : clr.textBody),
           fontSize: isGua ? 13 : 12,
-          fontWeight: FontWeight.bold,
+          fontWeight: AppFontWeight.bold,
         ),
       );
       shanTp.layout();
@@ -242,7 +316,10 @@ class _LuopanPainter extends CustomPainter {
     shanTp.dispose();
 
     // 八卦四隅位标号
-    final guaTp = TextPainter(textDirection: TextDirection.ltr, textAlign: TextAlign.center);
+    final guaTp = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
     // 巽(东南135°) 艮(东北45°) 坤(西南225°) 乾(西北315°)
     const guaList = ['乾', '坎', '艮', '震', '巽', '离', '坤', '兑'];
     const guaAngles = [315.0, 0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0];
@@ -252,7 +329,10 @@ class _LuopanPainter extends CustomPainter {
       final y = (r * 0.85 + r * 0.55) / 2 * math.sin(angle);
       guaTp.text = TextSpan(
         text: guaList[i],
-        style: TextStyle(color: clr.waterDeepGlow, fontSize: 13),
+        style: TextStyle(
+          color: clr.waterDeepGlow,
+          fontSize: AppFontSize.bodySmall,
+        ),
       );
       guaTp.layout();
       guaTp.paint(canvas, Offset(x - guaTp.width / 2, y - guaTp.height / 2));

@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:jeenith/core/theme/app_theme.dart';
 
 /// 全局背景星尘：缓慢漂浮 + 闪烁的金色微粒，渲染于所有页面底层。
 ///
@@ -97,7 +98,7 @@ class _StarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
     // 浅色主题用深金色星点，深色主题用鎏金。
-    final baseColor = isLight ? const Color(0xFF9B7A2A) : const Color(0xFFD4A857);
+    final baseColor = isLight ? AppColorsLight.yang : AppColors.yang;
     for (final s in stars) {
       final yy = ((s.y + t * s.drift) % 1.0) * h;
       final xx = s.x * w;
