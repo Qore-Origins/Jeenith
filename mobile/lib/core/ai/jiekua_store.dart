@@ -35,6 +35,11 @@ class JiekuaSession {
   final String techName;
   final String summary;
   final String hexuanText; // 卦象原文（AI 上下文）
+  final String? title;
+  final String? initialQuestion;
+  final String? linkedHistoryEntryId;
+  final String reflection;
+  final DateTime? reviewedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String notes;
@@ -45,6 +50,11 @@ class JiekuaSession {
     required this.techName,
     required this.summary,
     required this.hexuanText,
+    this.title,
+    this.initialQuestion,
+    this.linkedHistoryEntryId,
+    this.reflection = '',
+    this.reviewedAt,
     required this.createdAt,
     required this.updatedAt,
     this.notes = '',
@@ -56,6 +66,11 @@ class JiekuaSession {
         'techName': techName,
         'summary': summary,
         'hexuanText': hexuanText,
+        'title': title,
+        'initialQuestion': initialQuestion,
+        'linkedHistoryEntryId': linkedHistoryEntryId,
+        'reflection': reflection,
+        'reviewedAt': reviewedAt?.toIso8601String(),
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
         'notes': notes,
@@ -67,6 +82,13 @@ class JiekuaSession {
         techName: j['techName'] as String,
         summary: j['summary'] as String,
         hexuanText: j['hexuanText'] as String,
+        title: j['title'] as String?,
+        initialQuestion: j['initialQuestion'] as String?,
+        linkedHistoryEntryId: j['linkedHistoryEntryId'] as String?,
+        reflection: j['reflection'] as String? ?? '',
+        reviewedAt: j['reviewedAt'] == null
+            ? null
+            : DateTime.parse(j['reviewedAt'] as String),
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
         notes: j['notes'] as String? ?? '',
@@ -75,10 +97,35 @@ class JiekuaSession {
             .toList(),
       );
 
+  String get displayTitle {
+    final savedTitle = title?.trim();
+    if (savedTitle != null && savedTitle.isNotEmpty) return savedTitle;
+
+    final question = (initialQuestion ?? '').trim();
+    if (question.isNotEmpty) return question;
+
+    for (final message in messages) {
+      if (message.role == 'user' && message.content.trim().isNotEmpty) {
+        return message.content.trim();
+      }
+    }
+
+    return '$techName · $summary';
+  }
+
   JiekuaSession copyWith({
     String? techName,
     String? summary,
     String? hexuanText,
+    String? title,
+    bool clearTitle = false,
+    String? initialQuestion,
+    bool clearInitialQuestion = false,
+    String? linkedHistoryEntryId,
+    bool clearLinkedHistoryEntryId = false,
+    String? reflection,
+    DateTime? reviewedAt,
+    bool clearReviewedAt = false,
     List<JiekuaMessage>? messages,
     DateTime? updatedAt,
     String? notes,
@@ -88,6 +135,15 @@ class JiekuaSession {
         techName: techName ?? this.techName,
         summary: summary ?? this.summary,
         hexuanText: hexuanText ?? this.hexuanText,
+        title: clearTitle ? null : title ?? this.title,
+        initialQuestion: clearInitialQuestion
+            ? null
+            : initialQuestion ?? this.initialQuestion,
+        linkedHistoryEntryId: clearLinkedHistoryEntryId
+            ? null
+            : linkedHistoryEntryId ?? this.linkedHistoryEntryId,
+        reflection: reflection ?? this.reflection,
+        reviewedAt: clearReviewedAt ? null : reviewedAt ?? this.reviewedAt,
         createdAt: createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         notes: notes ?? this.notes,
