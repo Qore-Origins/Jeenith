@@ -1824,9 +1824,9 @@
       "buildStatus": "release",
       "builtAt": "2026-09-26T21:09:24",
       "commit": "11757edbd7d2152d047c7f4f911e6516cf760706",
-      "publishedAt": null,
-      "url": null,
-      "status": "unpublished"
+      "publishedAt": "2026-09-26T21:24:03+08:00",
+      "url": "https://github.com/Qore-Origins/Jeenith/releases/tag/v3.2.0",
+      "status": "published"
     }
   ]
 }
