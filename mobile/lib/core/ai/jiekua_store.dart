@@ -37,6 +37,7 @@ class JiekuaSession {
   final String hexuanText; // 卦象原文（AI 上下文）
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String notes;
   final List<JiekuaMessage> messages;
 
   const JiekuaSession({
@@ -46,6 +47,7 @@ class JiekuaSession {
     required this.hexuanText,
     required this.createdAt,
     required this.updatedAt,
+    this.notes = '',
     required this.messages,
   });
 
@@ -56,6 +58,7 @@ class JiekuaSession {
         'hexuanText': hexuanText,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+        'notes': notes,
         'messages': messages.map((m) => m.toJson()).toList(),
       };
 
@@ -66,22 +69,28 @@ class JiekuaSession {
         hexuanText: j['hexuanText'] as String,
         createdAt: DateTime.parse(j['createdAt'] as String),
         updatedAt: DateTime.parse(j['updatedAt'] as String),
+        notes: j['notes'] as String? ?? '',
         messages: ((j['messages'] as List?) ?? const [])
             .map((m) => JiekuaMessage.fromJson(m as Map<String, dynamic>))
             .toList(),
       );
 
   JiekuaSession copyWith({
+    String? techName,
+    String? summary,
+    String? hexuanText,
     List<JiekuaMessage>? messages,
     DateTime? updatedAt,
+    String? notes,
   }) =>
       JiekuaSession(
         id: id,
-        techName: techName,
-        summary: summary,
-        hexuanText: hexuanText,
+        techName: techName ?? this.techName,
+        summary: summary ?? this.summary,
+        hexuanText: hexuanText ?? this.hexuanText,
         createdAt: createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        notes: notes ?? this.notes,
         messages: messages ?? this.messages,
       );
 }

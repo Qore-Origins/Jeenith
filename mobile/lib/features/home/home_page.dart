@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/branding.dart';
 import '../../core/config/app_config.dart';
 import '../../core/config/config_providers.dart';
+import '../../core/layout/app_breakpoints.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/divination/divination_registry.dart';
 import '../../shared/widgets/animated_expand_icon.dart';
@@ -114,9 +115,11 @@ class _HomePageState extends ConsumerState<HomePage>
         color: c.panel,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: c.resolve(
-                const Color.fromRGBO(212, 168, 87, 0.30),
-                const Color.fromRGBO(155, 122, 42, 0.35))),
+          color: c.resolve(
+            const Color.fromRGBO(212, 168, 87, 0.30),
+            const Color.fromRGBO(155, 122, 42, 0.35),
+          ),
+        ),
       ),
       child: ExpansionTile(
         controller: _guideController,
@@ -163,33 +166,57 @@ class _HomePageState extends ConsumerState<HomePage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('1. 单一卜算术起卦',
-                    style: TextStyle(
-                        color: c.goldBright,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
-                Text('第一次问大致的问题，第二次问细致的问题。',
-                    style:
-                        TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
-                const SizedBox(height: 8),
-                Text('2. 多卜算术组合使用',
-                    style: TextStyle(
-                        color: c.goldBright,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
-                Text('先用一种卜算术起卦问大致的问题，再用另外一种起卦问细节上的问题。',
-                    style:
-                        TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
+                Text(
+                  '1. 单一卜算术起卦',
+                  style: TextStyle(
+                    color: c.goldBright,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '第一次问大致的问题，第二次问细致的问题。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Text(
-                    '3. 可以将卦象的完整截图和问题一并发送给 AI，也可以自己查资料。',
-                    style:
-                        TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
+                  '2. 多卜算术组合使用',
+                  style: TextStyle(
+                    color: c.goldBright,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '先用一种卜算术起卦问大致的问题，再用另外一种起卦问细节上的问题。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '3. 可以将卦象的完整截图和问题一并发送给 AI，也可以自己查资料。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
-                    '4. 点击起卦按钮前，心里默念问题，集中注意力，注意力达到顶点的一刹那起卦。',
-                    style:
-                        TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
+                  '4. 点击起卦按钮前，心里默念问题，集中注意力，注意力达到顶点的一刹那起卦。',
+                  style: TextStyle(
+                    color: c.textBody,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                ),
               ],
             ),
           ),
@@ -198,176 +225,307 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
+  Widget _brandHeader(AppClr c, {required bool desktop}) {
+    final brand = Column(
+      crossAxisAlignment: desktop
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.center,
+      children: [
+        Text(
+          Branding.appName,
+          style: TextStyle(
+            color: c.textPrimary,
+            fontFamily: AppFonts.serif,
+            fontSize: desktop ? 36 : 40,
+            fontWeight: FontWeight.w700,
+            letterSpacing: desktop ? 6 : 8,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          Branding.tagline,
+          textAlign: desktop ? TextAlign.left : TextAlign.center,
+          style: TextStyle(color: c.textMeta, fontSize: 12, letterSpacing: 2.2),
+        ),
+      ],
+    );
+
+    if (desktop) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(36, 30, 36, 18),
+        child: EntranceItem(
+          animation: _entrance,
+          interval: const Interval(0.0, 0.4),
+          slide: 14,
+          child: Row(
+            children: [
+              Expanded(child: brand),
+              const SizedBox(width: 24),
+              SizedBox(width: 360, child: _aiQuickEntry(c)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        const SizedBox(height: 42),
+        EntranceItem(
+          animation: _entrance,
+          interval: const Interval(0.0, 0.4),
+          slide: 16,
+          child: brand,
+        ),
+        const SizedBox(height: 16),
+        EntranceItem(
+          animation: _entrance,
+          interval: const Interval(0.18, 0.48),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: _aiQuickEntry(c),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _aiQuickEntry(AppClr c) => Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => _startExit(() => context.go('/jiekua')),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: c.jade.withValues(alpha: 0.34)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: c.jade.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.auto_awesome_outlined, color: c.jade, size: 21),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '从问题开始',
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '先梳理困惑，再选择适合的方法',
+                    style: TextStyle(color: c.textMeta, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward, color: c.jade, size: 18),
+          ],
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final techs = ref.watch(visibleTechsProvider);
     final c = AppClr.of(context);
-    return Scaffold(
-      body: SafeArea(
-        child: AnimatedBuilder(
-          animation: _exit,
-          builder: (context, child) => Opacity(
-            opacity: 1 - _exit.value,
-            child: Transform.translate(
-              offset: Offset(0, -36 * _exit.value),
-              child: child,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = AppBreakpoints.isDesktopNavigation(
+          MediaQuery.sizeOf(context).width,
+        );
+        final contentWidth =
+            constraints.maxWidth < AppBreakpoints.contentMaxWidth
+            ? constraints.maxWidth
+            : AppBreakpoints.contentMaxWidth;
+        final columns = AppBreakpoints.homeColumns(contentWidth);
+
+        return Scaffold(
+          body: SafeArea(
+            child: AnimatedBuilder(
+              animation: _exit,
+              builder: (context, child) => Opacity(
+                opacity: 1 - _exit.value,
+                child: Transform.translate(
+                  offset: Offset(0, -36 * _exit.value),
+                  child: child,
+                ),
+              ),
+              child: Stack(
                 children: [
-                  const SizedBox(height: 44),
-                  EntranceItem(
-                    animation: _entrance,
-                    interval: const Interval(0.0, 0.30),
-                    slide: 18,
-                    child: Text(
-                      Branding.appName,
-                      style: TextStyle(
-                        color: c.goldBright,
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 12,
+                  Column(
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: desktop ? contentWidth : constraints.maxWidth,
+                          child: _brandHeader(c, desktop: desktop),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  EntranceItem(
-                    animation: _entrance,
-                    interval: const Interval(0.12, 0.40),
-                    slide: 14,
-                    child: Text(
-                      Branding.tagline,
-                      style: TextStyle(
-                        color: c.textSubtitle,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  EntranceItem(
-                    animation: _entrance,
-                    interval: const Interval(0.20, 0.50),
-                    child: _guideCard(),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: GridView.count(
-                      crossAxisCount: 2,
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.86,
-                      children: [
-                        for (var i = 0; i < techs.length; i++)
-                          Builder(
-                            builder: (context) {
-                              final meta = techs[i].meta;
-                              return InteractableCard(
-                                entrance: _entrance,
-                                interval: Interval(
-                                  // v2.10.2：begin 必须 clamp，否则 i>=10 时
-                                  // 0.28+i*0.08 > 1.0 触发 Interval 断言崩溃。
-                                  // clamp 上限 0.92 确保与 end(≤1.0) 至少差 0.08。
-                                  (0.28 + i * 0.08).clamp(0.0, 0.92).toDouble(),
-                                  (0.62 + i * 0.08).clamp(0.0, 1.0).toDouble(),
-                                ),
-                                color: meta.accentColor,
-                                onTap: () => _onTapTech(meta.id),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 40,
-                                      decoration: BoxDecoration(
-                                        color: meta.accentColor.withValues(
-                                          alpha: 0.28,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.auto_awesome,
-                                        color: meta.accentColor,
-                                        size: 22,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      meta.displayName,
-                                      style: TextStyle(
-                                        color: meta.accentColor,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      meta.subtitle,
-                                      style: TextStyle(
-                                        color: c.textSubtitle,
-                                        fontSize: 11,
-                                        letterSpacing: 2,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Flexible(
-                                      child: Text(
-                                        meta.description,
-                                        style: TextStyle(
-                                          color: c.textBody,
-                                          fontSize: 11,
-                                          height: 1.35,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: AppBreakpoints.contentMaxWidth,
                           ),
-                      ],
-                    ),
+                          child: EntranceItem(
+                            animation: _entrance,
+                            interval: const Interval(0.20, 0.50),
+                            child: _guideCard(),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: desktop ? 16 : 12),
+                      Expanded(
+                        child: Center(
+                          child: SizedBox(
+                            width: contentWidth,
+                            child: GridView.count(
+                              crossAxisCount: columns,
+                              padding: EdgeInsets.fromLTRB(
+                                desktop ? 24 : 20,
+                                0,
+                                desktop ? 24 : 20,
+                                desktop ? 32 : 96,
+                              ),
+                              crossAxisSpacing: desktop ? 18 : 16,
+                              mainAxisSpacing: desktop ? 18 : 16,
+                              childAspectRatio: desktop ? 1.14 : 0.86,
+                              children: [
+                                for (var i = 0; i < techs.length; i++)
+                                  Builder(
+                                    builder: (context) {
+                                      final meta = techs[i].meta;
+                                      return InteractableCard(
+                                        entrance: _entrance,
+                                        interval: Interval(
+                                          // v2.10.2：begin 必须 clamp，否则 i>=10 时
+                                          // 0.28+i*0.08 > 1.0 触发 Interval 断言崩溃。
+                                          // clamp 上限 0.92 确保与 end(≤1.0) 至少差 0.08。
+                                          (0.28 + i * 0.08)
+                                              .clamp(0.0, 0.92)
+                                              .toDouble(),
+                                          (0.62 + i * 0.08)
+                                              .clamp(0.0, 1.0)
+                                              .toDouble(),
+                                        ),
+                                        color: meta.accentColor,
+                                        onTap: () => _onTapTech(meta.id),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              width: 40,
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: meta.accentColor
+                                                    .withValues(alpha: 0.16),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                Icons.auto_awesome,
+                                                color: meta.accentColor,
+                                                size: 22,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                              meta.displayName,
+                                              style: TextStyle(
+                                                color: meta.accentColor,
+                                                fontSize: desktop ? 21 : 22,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            Text(
+                                              meta.subtitle,
+                                              style: TextStyle(
+                                                color: c.textSubtitle,
+                                                fontSize: 11,
+                                                letterSpacing: 1.4,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Flexible(
+                                              child: Text(
+                                                meta.description,
+                                                style: TextStyle(
+                                                  color: c.textBody,
+                                                  fontSize: 11,
+                                                  height: 1.4,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (!desktop)
+                    Positioned(
+                      top: 6,
+                      left: 6,
+                      child: HoverableIconButton(
+                        icon: const Icon(Icons.history),
+                        tooltip: '历史记录',
+                        onPressed: () =>
+                            _startExit(() => context.go('/history')),
+                      ),
+                    ),
+                  if (!desktop)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          HoverableIconButton(
+                            icon: const SvgIcon('manual'),
+                            tooltip: '使用手册',
+                            onPressed: () =>
+                                _startExit(() => context.go('/manual')),
+                          ),
+                          const SizedBox(width: 8),
+                          HoverableIconButton(
+                            icon: const Icon(Icons.settings_outlined),
+                            tooltip: '设置',
+                            onPressed: () =>
+                                _startExit(() => context.go('/settings')),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
-              Positioned(
-                top: 6,
-                left: 6,
-                child: HoverableIconButton(
-                  icon: const Icon(Icons.history),
-                  tooltip: '历史记录',
-                  onPressed: () => _startExit(() => context.go('/history')),
-                ),
-              ),
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    HoverableIconButton(
-                      icon: const SvgIcon('manual'),
-                      tooltip: '使用手册',
-                      onPressed: () => _startExit(() => context.go('/manual')),
-                    ),
-                    const SizedBox(width: 8),
-                    HoverableIconButton(
-                      icon: const Icon(Icons.settings_outlined),
-                      tooltip: '设置',
-                      onPressed: () =>
-                          _startExit(() => context.go('/settings')),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

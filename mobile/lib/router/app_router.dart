@@ -21,6 +21,7 @@ import '../core/config/app_config.dart';
 import '../core/config/config_providers.dart';
 import '../core/divination/divination_registry.dart';
 import '../core/divination/divination_tech.dart';
+import '../core/history/history_store.dart';
 import '../features/home/home_page.dart';
 import '../features/history/history_page.dart';
 import '../features/jiekua/ui/jiekua_page.dart';
@@ -42,23 +43,28 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                  path: '/',
-                  builder: (context, state) => const HomePage()),
+              GoRoute(path: '/', builder: (context, state) => const HomePage()),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                  path: '/jiekua',
-                  builder: (context, state) => const JiekuaPage()),
+                path: '/jiekua',
+                builder: (context, state) {
+                  final extra = state.extra;
+                  return JiekuaPage(
+                    initialEntry: extra is HistoryEntry ? extra : null,
+                  );
+                },
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                  path: '/profiles',
-                  builder: (context, state) => const ProfilesPage()),
+                path: '/profiles',
+                builder: (context, state) => const ProfilesPage(),
+              ),
             ],
           ),
         ],
@@ -66,8 +72,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 顶层全屏页面（无底部导航）
       GoRoute(
         path: '/profiles/:id/divination',
-        builder: (context, state) => ProfileDivinationPage(
-            profileId: state.pathParameters['id']!),
+        builder: (context, state) =>
+            ProfileDivinationPage(profileId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/history',
@@ -77,8 +83,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
       ),
-      GoRoute(
-          path: '/manual', builder: (context, state) => const ManualPage()),
+      GoRoute(path: '/manual', builder: (context, state) => const ManualPage()),
       // 小六壬仪式入场动画
       GoRoute(
         path: '/ritual/xiaoliuren',
@@ -93,7 +98,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/ritual/liuyao',
         builder: (context, state) => ZhouyiRitual(
-            watermark: '六爻', onCompleted: () => context.go('/tech/liuyao')),
+          watermark: '六爻',
+          onCompleted: () => context.go('/tech/liuyao'),
+        ),
       ),
       GoRoute(
         path: '/ritual/ziwei',
@@ -163,7 +170,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           final Widget page = (tech == null)
               ? const Scaffold(body: Center(child: Text('未知卜算法')))
               : _TechPage(tech: tech);
-          final transitionsEnabled = ref
+          final transitionsEnabled =
+              ref
                   .read(configProvider)
                   .valueOrNull
                   ?.isAnimationEnabled(id, AnimationKind.transition) ??

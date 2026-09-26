@@ -6,30 +6,31 @@ class AppColors {
   AppColors._();
 
   // —— 背景 ——
-  static const Color bg = Color(0xFF0C0A12);
-  static const Color bgInner = Color(0xFF1B1626);
-  static const Color bgMid = Color(0xFF120F1A);
-  static const Color bgOuter = Color(0xFF0A0810);
+  static const Color bg = Color(0xFF171C19);
+  static const Color bgInner = Color(0xFF1D241F);
+  static const Color bgMid = Color(0xFF1A211C);
+  static const Color bgOuter = Color(0xFF141A16);
 
   // —— 鎏金系 ——
-  static const Color gold = Color(0xFFD4A857);
-  static const Color goldBright = Color(0xFFE8C87A);
-  static const Color goldLight = Color(0xFFF0D488);
-  static const Color goldBorder = Color.fromRGBO(212, 168, 87, 0.43);
+  static const Color gold = Color(0xFFA88D64);
+  static const Color goldBright = Color(0xFFB99D71);
+  static const Color goldLight = Color(0xFFCEB589);
+  static const Color goldBorder = Color.fromRGBO(168, 141, 100, 0.38);
+  static const Color jade = Color(0xFF9CAA8E);
 
   // —— 文字 ——
-  static const Color textHighlight = Color(0xFFFDF6E3);
-  static const Color textPrimary = Color(0xFFF0E6CF);
-  static const Color textBody = Color(0xFFC8BC9E);
-  static const Color textMeta = Color(0xFFA89A78);
-  static const Color textSubtitle = Color(0xFF8A7A55);
-  static const Color textHint = Color(0xFF6A6076);
+  static const Color textHighlight = Color(0xFFF5F2E8);
+  static const Color textPrimary = Color(0xFFE8E5DA);
+  static const Color textBody = Color(0xFFC3C4B8);
+  static const Color textMeta = Color(0xFFA6ACA0);
+  static const Color textSubtitle = Color(0xFF9DA598);
+  static const Color textHint = Color(0xFF7B8278);
 
   // —— 面板 ——
-  static const Color panel = Color.fromRGBO(18, 14, 26, 0.78);
-  static const Color card = Color.fromRGBO(28, 22, 38, 0.86);
-  static const Color buttonTop = Color(0xFF3A2F4A);
-  static const Color buttonBottom = Color(0xFF241C30);
+  static const Color panel = Color(0xFF1D241F);
+  static const Color card = Color(0xFF252C26);
+  static const Color buttonTop = Color(0xFF303A32);
+  static const Color buttonBottom = Color(0xFF232B25);
 
   // —— 五行色（小六壬六宫）——
   static const Color wood = Color(0xFF3FAE6F);
@@ -73,30 +74,31 @@ class AppColorsLight {
   AppColorsLight._();
 
   // —— 背景（浅米色）——
-  static const Color bg = Color(0xFFF6F0E2);
-  static const Color bgInner = Color(0xFFEBE2CC);
-  static const Color bgMid = Color(0xFFF1E9D5);
-  static const Color bgOuter = Color(0xFFE5D9BD);
+  static const Color bg = Color(0xFFF0EEE5);
+  static const Color bgInner = Color(0xFFFAF9F4);
+  static const Color bgMid = Color(0xFFF7F5ED);
+  static const Color bgOuter = Color(0xFFE7E4DA);
 
   // —— 鎏金系（深一些以保证对比度）——
-  static const Color gold = Color(0xFF9B7A2A);
-  static const Color goldBright = Color(0xFF8A6A1E);
-  static const Color goldLight = Color(0xFFB89534);
-  static const Color goldBorder = Color.fromRGBO(155, 122, 42, 0.55);
+  static const Color gold = Color(0xFF96784F);
+  static const Color goldBright = Color(0xFF856A47);
+  static const Color goldLight = Color(0xFFAB8A5B);
+  static const Color goldBorder = Color.fromRGBO(150, 120, 79, 0.42);
+  static const Color jade = Color(0xFF5E7465);
 
   // —— 文字 ——
-  static const Color textHighlight = Color(0xFF1A1208);
-  static const Color textPrimary = Color(0xFF2E2210);
-  static const Color textBody = Color(0xFF4A3A1E);
-  static const Color textMeta = Color(0xFF6B5A3A);
-  static const Color textSubtitle = Color(0xFF8A7A55);
-  static const Color textHint = Color(0xFF9B8C6E);
+  static const Color textHighlight = Color(0xFF20221E);
+  static const Color textPrimary = Color(0xFF282923);
+  static const Color textBody = Color(0xFF55574F);
+  static const Color textMeta = Color(0xFF70736A);
+  static const Color textSubtitle = Color(0xFF68786B);
+  static const Color textHint = Color(0xFF85877E);
 
   // —— 面板 ——
-  static const Color panel = Color.fromRGBO(245, 238, 220, 0.92);
-  static const Color card = Color.fromRGBO(240, 232, 212, 0.95);
-  static const Color buttonTop = Color(0xFFEBE2CC);
-  static const Color buttonBottom = Color(0xFFD9CBA8);
+  static const Color panel = Color(0xFFFAF9F4);
+  static const Color card = Color(0xFFFFFEFA);
+  static const Color buttonTop = Color(0xFFE8E5DB);
+  static const Color buttonBottom = Color(0xFFDFDCD1);
 
   // —— 五行色 ——
   static const Color wood = Color(0xFF2D8E54);
@@ -153,9 +155,12 @@ class AppClr {
 
   // —— 鎏金系 ——
   Color get gold => _lerp(AppColors.gold, AppColorsLight.gold);
-  Color get goldBright => _lerp(AppColors.goldBright, AppColorsLight.goldBright);
+  Color get goldBright =>
+      _lerp(AppColors.goldBright, AppColorsLight.goldBright);
   Color get goldLight => _lerp(AppColors.goldLight, AppColorsLight.goldLight);
-  Color get goldBorder => _lerp(AppColors.goldBorder, AppColorsLight.goldBorder);
+  Color get goldBorder =>
+      _lerp(AppColors.goldBorder, AppColorsLight.goldBorder);
+  Color get jade => _lerp(AppColors.jade, AppColorsLight.jade);
 
   // —— 文字 ——
   Color get textHighlight =>
@@ -189,11 +194,13 @@ class AppClr {
   Color get changing => _lerp(AppColors.changing, AppColorsLight.changing);
 
   // —— 断语分级色 ——
-  Color get gradeGreat => _lerp(AppColors.gradeGreat, AppColorsLight.gradeGreat);
+  Color get gradeGreat =>
+      _lerp(AppColors.gradeGreat, AppColorsLight.gradeGreat);
   Color get gradeGood => _lerp(AppColors.gradeGood, AppColorsLight.gradeGood);
   Color get gradeSteady =>
       _lerp(AppColors.gradeSteady, AppColorsLight.gradeSteady);
-  Color get gradeRough => _lerp(AppColors.gradeRough, AppColorsLight.gradeRough);
+  Color get gradeRough =>
+      _lerp(AppColors.gradeRough, AppColorsLight.gradeRough);
   Color get gradeBad => _lerp(AppColors.gradeBad, AppColorsLight.gradeBad);
 }
 
@@ -216,6 +223,7 @@ extension AppClrContext on BuildContext {
 /// 字体常量。
 class AppFonts {
   AppFonts._();
+
   /// 思源宋体（如已打包则用宋体；否则回退系统默认）。
   static const String serif = 'SourceHanSerif';
 }
@@ -230,13 +238,15 @@ ThemeData _darkTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    fontFamily: AppFonts.serif,
-    scaffoldBackgroundColor: Colors.transparent,
+    scaffoldBackgroundColor: AppColors.bg,
     colorScheme: const ColorScheme.dark(
       primary: AppColors.gold,
       secondary: AppColors.goldBright,
+      tertiary: AppColors.jade,
       surface: AppColors.bg,
-      onPrimary: Color(0xFF1A1208),
+      onPrimary: Color(0xFF22251F),
+      onSecondary: Color(0xFF22251F),
+      onTertiary: Color(0xFF22251F),
       onSurface: AppColors.textPrimary,
     ),
     appBarTheme: const AppBarTheme(
@@ -247,13 +257,13 @@ ThemeData _darkTheme() {
         color: AppColors.goldBright,
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        letterSpacing: 6,
+        letterSpacing: 2,
       ),
       iconTheme: IconThemeData(color: AppColors.gold),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color.fromRGBO(20, 16, 28, 0.86),
+      fillColor: const Color(0xFF202721),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: AppColors.goldBorder),
@@ -271,13 +281,15 @@ ThemeData _lightTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: AppFonts.serif,
-    scaffoldBackgroundColor: Colors.transparent,
+    scaffoldBackgroundColor: AppColorsLight.bg,
     colorScheme: const ColorScheme.light(
       primary: AppColorsLight.gold,
       secondary: AppColorsLight.goldBright,
+      tertiary: AppColorsLight.jade,
       surface: AppColorsLight.bg,
-      onPrimary: Color(0xFFF6F0E2),
+      onPrimary: Color(0xFFFFFEFA),
+      onSecondary: Color(0xFFFFFEFA),
+      onTertiary: Color(0xFFFFFEFA),
       onSurface: AppColorsLight.textPrimary,
     ),
     appBarTheme: const AppBarTheme(
@@ -288,13 +300,13 @@ ThemeData _lightTheme() {
         color: AppColorsLight.goldBright,
         fontSize: 20,
         fontWeight: FontWeight.bold,
-        letterSpacing: 6,
+        letterSpacing: 2,
       ),
       iconTheme: IconThemeData(color: AppColorsLight.gold),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color.fromRGBO(240, 232, 212, 0.86),
+      fillColor: const Color(0xFFF3F2E9),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: AppColorsLight.goldBorder),

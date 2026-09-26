@@ -5,8 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/app_config.dart';
 import 'core/config/config_providers.dart';
+import 'core/layout/app_breakpoints.dart';
 import 'core/rng/rng_providers.dart';
-import 'shared/widgets/starfield.dart';
+import 'shared/widgets/app_desktop_navigation.dart';
 import 'router/app_router.dart';
 
 class JeenithApp extends ConsumerStatefulWidget {
@@ -66,8 +67,7 @@ class _JeenithAppState extends ConsumerState<JeenithApp>
         _themeCtrl.value = isLight ? 1.0 : 0.0;
         _firstBuild = false;
       } else {
-        _themeCtrl.animateTo(isLight ? 1.0 : 0.0,
-            curve: Curves.easeInOutCubic);
+        _themeCtrl.animateTo(isLight ? 1.0 : 0.0, curve: Curves.easeInOutCubic);
       }
     }
 
@@ -76,10 +76,8 @@ class _JeenithAppState extends ConsumerState<JeenithApp>
       onPointerHover: tracker.onPointerHover,
       child: AnimatedBuilder(
         animation: _themeCtrl,
-        builder: (context, child) => ThemeAnimScope(
-          t: _themeCtrl.value,
-          child: child!,
-        ),
+        builder: (context, child) =>
+            ThemeAnimScope(t: _themeCtrl.value, child: child!),
         child: MaterialApp.router(
           title: '志极',
           theme: appTheme(isLight: isLight),
@@ -89,11 +87,21 @@ class _JeenithAppState extends ConsumerState<JeenithApp>
             final t = ThemeAnimScope.of(context);
             return ColoredBox(
               color: Color.lerp(AppColors.bg, AppColorsLight.bg, t)!,
-              child: Stack(
-                children: [
-                  Positioned.fill(child: Starfield(isLight: t >= 0.5)),
-                  if (child != null) Positioned.fill(child: child),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final content = child ?? const SizedBox.shrink();
+                  if (!AppBreakpoints.isDesktopNavigation(
+                    constraints.maxWidth,
+                  )) {
+                    return content;
+                  }
+                  return Row(
+                    children: [
+                      AppDesktopNavigation(router: router),
+                      Expanded(child: content),
+                    ],
+                  );
+                },
               ),
             );
           },

@@ -19,13 +19,14 @@ class GlmClient {
   static const _endpoint =
       'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 
-  /// 默认系统提示：解卦师人格。
+  /// 默认系统提示：区分 app 计算结果、模型推断与方法建议。
   static const defaultSystemPrompt =
-      '你是一位精通中国传统卜算（周易、紫微斗数、八字、梅花易数等）的解卦师。'
-      '用户会提供卦象或卜算结果，以及想问的问题。'
-      '请结合卦象做详细、全面的解读，并给出可行、正面的建议。'
-      '可使用 Markdown 分点、加粗、标题等排版，语言自然，使用中文；不要编造卦象中没有的事实。'
-      '用户可能连续追问，请结合此前对话上下文回答。';
+      '你是 Jeenith 中的传统术数与问题梳理助理，使用中文回答，表达清楚、克制。'
+      '应用只会提供当前用户问题以及用户在本次发送前明确勾选的本地上下文。'
+      '没有提供应用计算结果时，不得声称已经起卦、排盘或得到任何计算结果；可以提出澄清问题，或在用户提供应用术数目录时从目录中推荐最多三种方法，说明理由、所需输入和局限，并请用户自行选择后回到应用计算。'
+      '提供计算结果时，把其中明确写出的计算事实与模型解释分开；解释要说明依据和不确定性，不把推断包装成事实。'
+      '只可引用用户本次实际提供的原文或资料；未提供来源时明确说明没有附带来源，不得编造古籍、篇章、原文或出处。'
+      '可以用 Markdown 标题和列表帮助阅读；给出可执行但不过度确定的思考建议，不替用户作重大人生或财务决定。';
 
   /// 多轮对话：[messages] 为 user/assistant 历史对话（不含 system，内部自动前置系统提示）。
   static Future<String> chat({
@@ -58,7 +59,8 @@ class GlmClient {
         .timeout(const Duration(seconds: 60));
 
     if (resp.statusCode != 200) {
-      throw Exception('GLM 请求失败（${resp.statusCode}）：${resp.body}');
+      throw Exception(
+          'GLM 请求失败（${resp.statusCode}），请检查网络或 API 配置后重试');
     }
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
     final choices = data['choices'] as List?;
@@ -101,8 +103,9 @@ class GlmClient {
     try {
       final resp = await client.send(req);
       if (resp.statusCode != 200) {
-        final body = await resp.stream.bytesToString();
-        throw Exception('GLM 请求失败（${resp.statusCode}）：$body');
+        await resp.stream.drain<void>();
+        throw Exception(
+            'GLM 请求失败（${resp.statusCode}），请检查网络或 API 配置后重试');
       }
       await for (final line in resp.stream
           .transform(utf8.decoder)

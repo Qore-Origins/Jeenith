@@ -1,4 +1,6 @@
 // Copyright (c) 2026 Qore
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -9,18 +11,16 @@ import 'core/app/restart_controller.dart';
 import 'core/config/platform_info.dart';
 import 'data/yijing/hexagram_texts.dart';
 
-/// 桌面端窗口最小尺寸（防止 UI 压崩；略小于目标宽度让 targetWidth 能生效）。
-const _kMinWindowSize = Size(420, 700);
-
-/// 高度撑满时给任务栏等留的垂直边距。
+/// 窗口边缘为系统任务栏与桌面留出的空间。
 const _kVerticalMargin = 40.0;
+const _kHorizontalMargin = 48.0;
 
-/// 模拟手机竖屏比例（高/宽 ≈ 2.18，接近主流手机）。
-const _kPhoneAspect = 9.0 / 19.6;
-
-/// 桌面端目标窗口高度钳制范围。
-const _kHeightMin = 600.0;
-const _kHeightMax = 1600.0;
+/// 桌面窗口目标尺寸上限与宽屏比例。
+const _kMaxWindowWidth = 1440.0;
+const _kMaxWindowHeight = 960.0;
+const _kDesktopAspect = 1.45;
+const _kMinimumWindowWidth = 860.0;
+const _kMinimumWindowHeight = 560.0;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,16 +35,29 @@ Future<void> main() async {
     final logical = display.visibleSize ?? display.size;
     final screenH = logical.height;
 
-    // 高度撑满（留 _kVerticalMargin 边距），宽度按手机比例自适应。
-    final targetHeight = (screenH - _kVerticalMargin).clamp(
-      _kHeightMin,
-      _kHeightMax,
-    );
-    final targetWidth = targetHeight * _kPhoneAspect;
+    // 在当前显示器可用空间内创建宽屏工作区，不模拟手机竖屏比例。
+    final availableWidth = math
+        .max(0.0, logical.width - _kHorizontalMargin)
+        .toDouble();
+    final availableHeight = math
+        .max(0.0, screenH - _kVerticalMargin)
+        .toDouble();
+    final targetHeight = math
+        .min(availableHeight, _kMaxWindowHeight)
+        .toDouble();
+    final targetWidth = math
+        .min(
+          math.min(availableWidth, _kMaxWindowWidth),
+          targetHeight * _kDesktopAspect,
+        )
+        .toDouble();
 
     final windowOptions = WindowOptions(
       size: Size(targetWidth, targetHeight),
-      minimumSize: _kMinWindowSize,
+      minimumSize: Size(
+        math.min(targetWidth, _kMinimumWindowWidth).toDouble(),
+        math.min(targetHeight, _kMinimumWindowHeight).toDouble(),
+      ),
       center: true,
     );
 

@@ -66,11 +66,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     if (_query.isNotEmpty) {
       final q = _query.toLowerCase();
       r = r
-          .where((e) =>
-              e.summary.toLowerCase().contains(q) ||
-              e.techName.toLowerCase().contains(q) ||
-              e.detail.toLowerCase().contains(q) ||
-              (e.note ?? '').toLowerCase().contains(q))
+          .where(
+            (e) =>
+                e.summary.toLowerCase().contains(q) ||
+                e.techName.toLowerCase().contains(q) ||
+                e.detail.toLowerCase().contains(q) ||
+                (e.note ?? '').toLowerCase().contains(q),
+          )
           .toList();
     }
     return r;
@@ -127,29 +129,36 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     );
   }
 
-  void _openDetail(HistoryEntry e) {
+  Future<void> _openDetail(HistoryEntry e) async {
     final c = AppClr.of(context);
     final gradeBad = c.resolve(AppColors.gradeBad, AppColorsLight.gradeBad);
     final noteCtrl = TextEditingController(text: e.note ?? '');
-    showDialog(
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: c.card,
-        title: Text('${e.techName} · ${e.summary}',
-            style: TextStyle(
-                color: c.goldBright,
-                fontSize: 15,
-                fontWeight: FontWeight.bold)),
+        title: Text(
+          '${e.techName} · ${e.summary}',
+          style: TextStyle(
+            color: c.goldBright,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView(
             shrinkWrap: true,
             children: [
-              Text('时间：${e.time.toString().substring(0, 19)}',
-                  style: TextStyle(color: c.textMeta, fontSize: 12)),
+              Text(
+                '时间：${e.time.toString().substring(0, 19)}',
+                style: TextStyle(color: c.textMeta, fontSize: 12),
+              ),
               const SizedBox(height: 8),
-              Text(e.detail,
-                  style: TextStyle(color: c.textBody, fontSize: 12, height: 1.5)),
+              Text(
+                e.detail,
+                style: TextStyle(color: c.textBody, fontSize: 12, height: 1.5),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: noteCtrl,
@@ -179,17 +188,45 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           ),
           TextButton(
             onPressed: () async {
-              await HistoryStore.updateNote(e.id,
-                  noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim());
+              await HistoryStore.updateNote(
+                e.id,
+                noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+              );
               if (!ctx.mounted) return;
               Navigator.pop(ctx);
               _reload();
             },
             child: Text('保存备注', style: TextStyle(color: c.gold)),
           ),
+          TextButton.icon(
+            onPressed: () async {
+              final note = noteCtrl.text.trim();
+              await HistoryStore.updateNote(e.id, note.isEmpty ? null : note);
+              if (!mounted || !ctx.mounted) return;
+              Navigator.pop(ctx);
+              _reload();
+              context.go(
+                '/jiekua',
+                extra: HistoryEntry(
+                  id: e.id,
+                  techId: e.techId,
+                  techName: e.techName,
+                  time: e.time,
+                  summary: e.summary,
+                  detail: e.detail,
+                  note: note.isEmpty ? null : note,
+                  extra: e.extra,
+                ),
+              );
+            },
+            icon: const Icon(Icons.auto_awesome, size: 16),
+            label: const Text('进入 AI 解读'),
+            style: TextButton.styleFrom(foregroundColor: c.jade),
+          ),
         ],
       ),
     );
+    noteCtrl.dispose();
   }
 
   void _confirmClear() {
@@ -199,13 +236,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: c.card,
-        title: Text('清空全部历史',
-            style: TextStyle(
-                color: c.goldBright,
-                fontSize: 15,
-                fontWeight: FontWeight.bold)),
-        content: Text('此操作不可撤销，确定清空所有卜算历史记录？',
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5)),
+        title: Text(
+          '清空全部历史',
+          style: TextStyle(
+            color: c.goldBright,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          '此操作不可撤销，确定清空所有卜算历史记录？',
+          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -234,13 +276,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: c.card,
-        title: Text('删除选中记录',
-            style: TextStyle(
-                color: c.goldBright,
-                fontSize: 15,
-                fontWeight: FontWeight.bold)),
-        content: Text('确定删除选中的 $count 条记录？此操作不可撤销。',
-            style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5)),
+        title: Text(
+          '删除选中记录',
+          style: TextStyle(
+            color: c.goldBright,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          '确定删除选中的 $count 条记录？此操作不可撤销。',
+          style: TextStyle(color: c.textBody, fontSize: 13, height: 1.5),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -268,18 +315,18 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   }
 
   void _exitSelectMode() => setState(() {
-        _selected.clear();
-        _selectMode = false;
-      });
+    _selected.clear();
+    _selectMode = false;
+  });
 
   void _toggleSelected(String id) => setState(() {
-        if (_selected.contains(id)) {
-          _selected.remove(id);
-        } else {
-          _selected.add(id);
-        }
-        if (_selected.isEmpty) _selectMode = false;
-      });
+    if (_selected.contains(id)) {
+      _selected.remove(id);
+    } else {
+      _selected.add(id);
+    }
+    if (_selected.isEmpty) _selectMode = false;
+  });
 
   Future<void> _export(String format) async {
     final list = await HistoryStore.load();
@@ -322,7 +369,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       appBar: AppBar(
         leading: _selectMode
             ? IconButton(
-                icon: const Icon(Icons.close), onPressed: _exitSelectMode)
+                icon: const Icon(Icons.close),
+                onPressed: _exitSelectMode,
+              )
             : IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => context.go('/'),
@@ -333,29 +382,32 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         actions: _selectMode
             ? [
                 IconButton(
-                  icon: Icon(filtered.isNotEmpty &&
-                          filtered.every((e) => _selected.contains(e.id))
-                      ? Icons.deselect
-                      : Icons.select_all),
+                  icon: Icon(
+                    filtered.isNotEmpty &&
+                            filtered.every((e) => _selected.contains(e.id))
+                        ? Icons.deselect
+                        : Icons.select_all,
+                  ),
                   tooltip: '全选 / 取消全选',
                   onPressed: filtered.isEmpty
                       ? null
                       : () => setState(() {
-                            final all = filtered
-                                .every((e) => _selected.contains(e.id));
-                            if (all) {
-                              _selected.removeWhere(
-                                  (id) => filtered.any((e) => e.id == id));
-                            } else {
-                              _selected.addAll(filtered.map((e) => e.id));
-                            }
-                          }),
+                          final all = filtered.every(
+                            (e) => _selected.contains(e.id),
+                          );
+                          if (all) {
+                            _selected.removeWhere(
+                              (id) => filtered.any((e) => e.id == id),
+                            );
+                          } else {
+                            _selected.addAll(filtered.map((e) => e.id));
+                          }
+                        }),
                 ),
                 IconButton(
                   icon: Icon(Icons.delete, color: gradeBad),
                   tooltip: '删除选中',
-                  onPressed:
-                      _selected.isEmpty ? null : _confirmDeleteSelected,
+                  onPressed: _selected.isEmpty ? null : _confirmDeleteSelected,
                 ),
               ]
             : [
@@ -381,27 +433,29 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       body: _loading
           ? const Center(child: DivinationLoadingIndicator(size: 56))
           : _list.isEmpty
-              ? Center(
-                  child: Text('暂无历史记录',
-                      style: TextStyle(color: c.textHint)),
-                )
-              : Column(
-                  children: [
-                    _buildFilterBar(c),
-                    Expanded(
-                      child: filtered.isEmpty
-                          ? Center(
-                              child: Text('无匹配记录',
-                                  style: TextStyle(color: c.textHint)))
-                          : ListView.builder(
-                              padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
-                              itemCount: filtered.length,
-                              itemBuilder: (context, i) =>
-                                  _buildItem(c, filtered[i]),
-                            ),
-                    ),
-                  ],
+          ? Center(
+              child: Text('暂无历史记录', style: TextStyle(color: c.textHint)),
+            )
+          : Column(
+              children: [
+                _buildFilterBar(c),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? Center(
+                          child: Text(
+                            '无匹配记录',
+                            style: TextStyle(color: c.textHint),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+                          itemCount: filtered.length,
+                          itemBuilder: (context, i) =>
+                              _buildItem(c, filtered[i]),
+                        ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -419,12 +473,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             cursorColor: c.gold,
             decoration: InputDecoration(
               isDense: true,
-              prefixIcon:
-                  Icon(Icons.search, color: c.textSubtitle, size: 20),
+              prefixIcon: Icon(Icons.search, color: c.textSubtitle, size: 20),
               suffixIcon: _query.isNotEmpty
                   ? IconButton(
-                      icon:
-                          Icon(Icons.clear, color: c.textSubtitle, size: 18),
+                      icon: Icon(Icons.clear, color: c.textSubtitle, size: 18),
                       onPressed: () {
                         _searchCtrl.clear();
                         setState(() => _query = '');
@@ -435,8 +487,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               hintStyle: TextStyle(color: c.textHint, fontSize: 13),
               filled: true,
               fillColor: c.panel,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: c.goldBorder),
@@ -479,12 +533,14 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           border: Border.all(color: selected ? c.gold : c.goldBorder),
         ),
         alignment: Alignment.center,
-        child: Text(label,
-            style: TextStyle(
-              color: selected ? c.goldBright : c.textBody,
-              fontSize: 12,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            )),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? c.goldBright : c.textBody,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -497,31 +553,37 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: ListTile(
           contentPadding: EdgeInsets.zero,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           leading: _selectMode
               ? Icon(
-                  selected
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: selected ? c.goldBright : c.textHint,
                   size: 22,
                 )
               : null,
-          title: Text('${e.techName} · ${e.summary}',
-              style: TextStyle(
-                  color: c.goldBright,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
+          title: Text(
+            '${e.techName} · ${e.summary}',
+            style: TextStyle(
+              color: c.goldBright,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 2),
-              Text(e.time.toString().substring(0, 19),
-                  style: TextStyle(color: c.textMeta, fontSize: 11)),
+              Text(
+                e.time.toString().substring(0, 19),
+                style: TextStyle(color: c.textMeta, fontSize: 11),
+              ),
               if (e.note != null && e.note!.isNotEmpty)
-                Text('备注：${e.note}',
-                    style: TextStyle(color: c.textBody, fontSize: 12)),
+                Text(
+                  '备注：${e.note}',
+                  style: TextStyle(color: c.textBody, fontSize: 12),
+                ),
             ],
           ),
           trailing: _selectMode
@@ -530,23 +592,31 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.replay,
-                          color: e.extra != null ? c.gold : c.textHint,
-                          size: 20),
-                      tooltip:
-                          e.extra != null ? '恢复卦象' : '旧记录不支持恢复',
+                      icon: Icon(
+                        Icons.replay,
+                        color: e.extra != null ? c.gold : c.textHint,
+                        size: 20,
+                      ),
+                      tooltip: e.extra != null ? '恢复卦象' : '旧记录不支持恢复',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                          minWidth: 36, minHeight: 36),
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                       onPressed: e.extra != null ? () => _restore(e) : null,
                     ),
                     IconButton(
-                      icon: Icon(Icons.copy_all,
-                          color: c.textSubtitle, size: 20),
+                      icon: Icon(
+                        Icons.copy_all,
+                        color: c.textSubtitle,
+                        size: 20,
+                      ),
                       tooltip: '复制',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
-                          minWidth: 36, minHeight: 36),
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                       onPressed: () => _copyEntry(e),
                     ),
                     Icon(Icons.chevron_right, color: c.textSubtitle),
@@ -558,9 +628,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           onLongPress: _selectMode
               ? null
               : () => setState(() {
-                    _selectMode = true;
-                    _selected.add(e.id);
-                  }),
+                  _selectMode = true;
+                  _selected.add(e.id);
+                }),
         ),
       ),
     );
